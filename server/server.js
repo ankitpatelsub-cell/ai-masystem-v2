@@ -15,6 +15,7 @@ import reels from './routes/reels.js';
 import leads from './routes/leads.js';
 import settings from './routes/settings.js';
 import users from './routes/users.js';
+import permissions from './routes/permissions.js';
 
 const app = express();
 app.use(express.json());
@@ -30,6 +31,7 @@ app.use('/api/reels', reels);
 app.use('/api/leads', leads);
 app.use('/api/settings', settings);
 app.use('/api/users', users);
+app.use('/api/permissions', permissions);
 
 // Aggregate status (secret-free, safe for dashboard)
 app.get('/api/status', (_,res)=>{

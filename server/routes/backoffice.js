@@ -1,7 +1,7 @@
 // routes/backoffice.js — Autonomous back-office (LLM via shared llm_bridge with failover).
 import express from 'express';
 import db from '../db.js';
-import { requireAuth, logActivity } from '../auth.js';
+import { requirePerm, logActivity } from '../auth.js';
 import bridge from '/root/shared/llm_bridge.js';
 const runLLM = (prompt) => bridge.complete(prompt);
 const router = express.Router();
@@ -11,7 +11,7 @@ const TASKS = {
   'draft reply': 'Draft a professional customer-support reply to the latest ticket.',
 };
 
-router.post('/run', requireAuth(['admin', 'staff', 'viewer']), async (req, res) => {
+router.post('/run', requirePerm('backoffice:run'), async (req, res) => {
   const task = req.body?.task || '';
   const prompt = TASKS[task] || task;
   let result;
@@ -24,7 +24,7 @@ router.post('/run', requireAuth(['admin', 'staff', 'viewer']), async (req, res) 
   db.prepare('INSERT INTO activity (agent,icon,title,sub,user_id) VALUES (?,?,?,?,?)').run('backoffice', '🤖', 'Back-office task', task.slice(0, 40), req.user?.uid || 0);
   res.json({ task, result });
 });
-router.get('/state', requireAuth(['admin', 'staff', 'viewer']), (_, res) => {
+router.get('/state', requirePerm('backoffice:run'), (_, res) => {
   res.json({ tasks: Object.keys(TASKS), provider: process.env.MODEL_PROVIDER || 'claude' });
 });
 export default router;

@@ -89,13 +89,27 @@ CREATE TABLE IF NOT EXISTS activity (
 );
 `);
 
-// ---- Conversations (optional memory per agent per user) ----
+// ---- Roles & Permissions matrix (admin-managed) ----
 db.exec(`
-CREATE TABLE IF NOT EXISTS conversations (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  agent TEXT, user_id INTEGER, role TEXT, text TEXT, created_at INTEGER
+CREATE TABLE IF NOT EXISTS role_permissions (
+  role TEXT NOT NULL,
+  perm TEXT NOT NULL,
+  allowed INTEGER NOT NULL DEFAULT 1,
+  PRIMARY KEY(role, perm)
 );
 `);
+const DEFAULT_PERMS = {
+  admin: ['car:chat','car:manage','hospital:chat','hospital:manage','hotel:chat','hotel:manage','manager:use','backoffice:run','reels:build','leads:view','leads:manage','users:manage','settings:manage'],
+  staff: ['car:chat','car:manage','hospital:chat','hotel:chat','manager:use','backoffice:run','reels:build','leads:view','leads:manage'],
+  viewer: ['car:chat','hospital:chat','hotel:chat','manager:use','leads:view'],
+};
+const ALL_PERMS = Array.from(new Set(Object.values(DEFAULT_PERMS).flat()));
+for (const [role, perms] of Object.entries(DEFAULT_PERMS)) {
+  for (const p of ALL_PERMS) {
+    const allowed = perms.includes(p) ? 1 : 0;
+    db.prepare('INSERT OR IGNORE INTO role_permissions (role,perm,allowed) VALUES (?,?,?)').run(role, p, allowed);
+  }
+}
 
 // ---- Seed: first admin user (idempotent) ----
 const adminCount = db.prepare('SELECT COUNT(*) c FROM users').get().c;

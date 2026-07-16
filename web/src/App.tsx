@@ -11,6 +11,7 @@ import ReelsPage from './pages/ReelsPage';
 import LeadsPage from './pages/LeadsPage';
 import SettingsPage from './pages/SettingsPage';
 import UsersPage from './pages/UsersPage';
+import PermissionsPage from './pages/PermissionsPage';
 import Login from './pages/Login';
 
 const NAV = [
@@ -23,6 +24,7 @@ const NAV = [
   { to: '/reels', ic: '🎬', lbl: 'Reels' },
   { to: '/leads', ic: '📥', lbl: 'Leads' },
   { to: '/users', ic: '👥', lbl: 'Users' },
+  { to: '/permissions', ic: '🔐', lbl: 'Roles' },
   { to: '/settings', ic: '⚙️', lbl: 'Settings' },
 ];
 
@@ -78,6 +80,7 @@ export default function App() {
                 <Route path="/reels" element={<ReelsPage />} />
                 <Route path="/leads" element={<LeadsPage />} />
                 <Route path="/users" element={<UsersPage />} />
+                <Route path="/permissions" element={<PermissionsPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

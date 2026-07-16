@@ -1,7 +1,7 @@
 // routes/car.js — Car Sales assistant on the SHARED db.
 import express from 'express';
 import db from '../db.js';
-import { requireAuth, logActivity } from '../auth.js';
+import { requireAuth, requirePerm, logActivity } from '../auth.js';
 
 const router = express.Router();
 
@@ -47,14 +47,14 @@ function run(text, channel, locale) {
   return { intent, locale, steps };
 }
 
-router.post('/chat', (req, res) => {
+router.post('/chat', requirePerm('car:chat'), (req, res) => {
   const { text, channel, locale } = req.body || {};
   const out = run(text, channel, locale);
   logActivity('car', '🚗', 'Car enquiry', (text || '').slice(0, 40));
   res.json(out);
 });
 router.get('/cars', (_, res) => res.json(db.prepare("SELECT * FROM car_cars WHERE status='available' ORDER BY price").all()));
-router.post('/cars', requireAuth(['admin', 'staff']), (req, res) => {
+router.post('/cars', requirePerm('car:manage'), (req, res) => {
   const c = req.body || {};
   const id = db.prepare('INSERT INTO car_cars (brand,model,year,fuel,km,price,city) VALUES (?,?,?,?,?,?,?)')
     .run(c.brand, c.model, c.year, c.fuel, c.km, c.price, c.city).lastInsertRowid;

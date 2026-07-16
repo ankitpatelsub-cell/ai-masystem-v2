@@ -72,6 +72,25 @@ export function requireAuth(roles) {
     } catch { res.status(401).json({ error: 'invalid token' }); }
   };
 }
+
+// Permission check against the admin-managed matrix in DB.
+export function requirePerm(perm) {
+  return (req, res, next) => {
+    const h = req.headers['authorization'] || '';
+    const token = h.startsWith('Bearer ') ? h.slice(7) : null;
+    if (!token) return res.status(401).json({ error: 'auth required' });
+    let d;
+    try { d = jwt.verify(token, SECRET); } catch { return res.status(401).json({ error: 'invalid token' }); }
+    req.user = d;
+    const row = db.prepare('SELECT allowed FROM role_permissions WHERE role=? AND perm=?').get(d.role, perm);
+    if (!row || !row.allowed) return res.status(403).json({ error: 'no permission: ' + perm });
+    next();
+  };
+}
+export function hasPerm(role, perm) {
+  const row = db.prepare('SELECT allowed FROM role_permissions WHERE role=? AND perm=?').get(role, perm);
+  return !!(row && row.allowed);
+}
 export function logActivity(agent, icon, title, sub, userId) {
   try { db.prepare('INSERT INTO activity (agent,icon,title,sub,user_id) VALUES (?,?,?,?,?)').run(agent, icon, title, sub || '', userId || 0); } catch {}
 }

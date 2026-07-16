@@ -1,7 +1,7 @@
 // routes/hospital.js — Patient queue on SHARED db.
 import express from 'express';
 import db from '../db.js';
-import { logActivity } from '../auth.js';
+import { requirePerm, logActivity } from '../auth.js';
 const router = express.Router();
 const I18N = { en:{joined:'Joined', eta:'ETA', surge:'Surge', voice:'Voice alert', think:'intake'}, hi:{joined:'शामिल', eta:'अनुमानित', surge:'भीड़', voice:'आवाज़ अलर्ट', think:'प्रवेश'}, ja:{joined:'受付', eta:'目安', surge:'混雑', voice:'音声通知', think:'受付中'} };
 
@@ -23,7 +23,7 @@ function intake(text, locale){
   if(waiting>=5){ steps.push({tool:'surge_detected',result:`${L.surge}: ${waiting}`}); steps.push({tool:'notify_voice',result:`${L.voice} (${waiting})`}); }
   return {id, steps};
 }
-router.post('/intake',(req,res)=>{ const {text,locale}=req.body||{}; const o=intake(text,locale); logActivity('hospital','🏥','Patient intake',(text||'').slice(0,40)); res.json(o); });
+router.post('/intake', requirePerm('hospital:chat'), (req,res)=>{ const {text,locale}=req.body||{}; const o=intake(text,locale); logActivity('hospital','🏥','Patient intake',(text||'').slice(0,40)); res.json(o); });
 router.get('/state',(_,res)=>{ const q=db.prepare("SELECT * FROM hospital_queue WHERE status='waiting' ORDER BY position").all(); res.json({queue:q,waiting:q.length}); });
 router.post('/next',(req,res)=>{ const row=db.prepare("SELECT * FROM hospital_queue WHERE status='waiting' ORDER BY position LIMIT 1").get();
   if(!row) return res.json({msg:'empty'}); db.prepare("UPDATE hospital_queue SET status='seen' WHERE id=?").run(row.id); logActivity('hospital','🏥','Called next',`#${row.id}`); res.json({called:row}); });
