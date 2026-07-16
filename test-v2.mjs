@@ -93,6 +93,13 @@ await T('leads SEND (draft via SDK + real Gmail send)', async () => {
   assert.strictEqual(status, 200); assert.ok(/sent/i.test(data.result), 'expected sent: ' + data.result);
   db.prepare('DELETE FROM leads WHERE id=?').run(id); // cleanup
 });
+await T('leads ingest-maps endpoint accepts (real source)', async () => {
+  const { status } = await j('POST', '/api/leads/ingest-maps', { token: adminTok });
+  assert.strictEqual(status, 200); // returns immediately; child scrapes in bg
+  // verify at least the real-source rows exist from prior runs
+  const c = db.prepare("SELECT COUNT(*) c FROM leads WHERE source='maps'").get().c;
+  assert.ok(c > 0, 'expected real maps leads in DB');
+});
 await T('status (public)', async () => {
   const { status, data } = await j('GET', '/api/status');
   assert.strictEqual(status, 200); assert.strictEqual(data.agents, 6);

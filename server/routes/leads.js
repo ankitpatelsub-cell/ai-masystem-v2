@@ -43,4 +43,11 @@ router.post('/:id/send', requirePerm('leads:manage'), async (req,res)=>{
   } catch(e){ result = 'send failed: ' + e.message.split('\n')[0]; }
   res.json({ ok:true, result });
 });
+// Real data source: scrape live businesses via the maps skill -> insert as leads.
+router.post('/ingest-maps', requirePerm('leads:manage'), async (req,res)=>{
+  const { spawn } = await import('child_process');
+  const py = spawn('python3', ['ingest_maps.py'], { cwd: process.cwd(), env: { ...process.env, DB_PATH: process.env.DB_PATH || '/root/ai-masystem-v2/masystem.db' } });
+  let out = ''; py.stdout.on('data', d => out += d); py.stderr.on('data', d => out += d);
+  py.on('close', code => res.json({ ok: true, exit: code, log: out.slice(-500) }));
+});
 export default router;

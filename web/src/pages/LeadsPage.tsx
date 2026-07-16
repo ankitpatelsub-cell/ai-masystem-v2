@@ -6,6 +6,7 @@ export default function LeadsPage() {
   const [leads, setLeads] = useState<any[]>([]);
   const [err, setErr] = useState('');
   const [sending, setSending] = useState<number | null>(null);
+  const [syncing, setSyncing] = useState(false);
   const [note, setNote] = useState('');
 
   const load = () => { api('GET', '/api/leads').then(setLeads).catch(e => setErr(e.message)); };
@@ -24,6 +25,15 @@ export default function LeadsPage() {
     } catch (e: any) { setNote(`#${id}: ${e.message}`); }
     setSending(null);
   }
+  async function syncMaps() {
+    setSyncing(true); setNote('Scraping live businesses from maps…');
+    try {
+      const d = await api('POST', '/api/leads/ingest-maps');
+      setNote(`Maps sync done (exit ${d.exit}): ${d.log?.split('\n').slice(-2).join(' ')}`);
+      load();
+    } catch (e: any) { setNote('Maps sync failed: ' + e.message); }
+    setSyncing(false);
+  }
 
   return (
     <>
@@ -31,6 +41,10 @@ export default function LeadsPage() {
       <div className="card">
         {err && <div className="muted" style={{ color: 'var(--red)' }}>{err}</div>}
         {note && <div className="muted" style={{ color: 'var(--brand)', marginBottom: 10 }}>{note}</div>}
+        <div style={{ marginBottom: 12, display: 'flex', gap: 10, alignItems: 'center' }}>
+          <button className="btn" disabled={syncing} onClick={syncMaps}>{syncing ? 'Scraping live businesses…' : '🌐 Sync real leads (Maps)'}</button>
+          <span className="muted" style={{ fontSize: 12 }}>pulls live hospitals/hotels from maps into the pipeline</span>
+        </div>
         <table>
           <thead><tr><th>Name</th><th>Email</th><th>Interest</th><th>Status</th><th>Send</th><th>When</th></tr></thead>
           <tbody>{leads.map((l: any) => (
