@@ -76,6 +76,24 @@ server.tool('hotel_bookings', 'Show recent hotel bookings', {}, async () => {
   return { content: [{ type: 'text', text: JSON.stringify(rows, null, 2) }] };
 });
 
+// --- Email send tool (REAL Gmail send via himalaya) ---
+import { execFileSync } from 'child_process';
+const HIMALAYA = '/root/.local/bin/himalaya';
+server.tool('send_lead_email', 'Draft + REALLY send a lead-outreach email via Gmail (himalaya).', {
+  to: z.string(),
+  subject: z.string(),
+  body: z.string(),
+}, async ({ to, subject, body }) => {
+  const date = new Date().toUTCString().replace('GMT', '+0000');
+  const raw = `To: ${to}\r\nFrom: admin.ai.masystem@gmail.com\r\nSubject: ${subject}\r\nDate: ${date}\r\n\r\n${body}\r\n`;
+  try {
+    const out = execFileSync(HIMALAYA, ['message', 'send'], { input: raw, encoding: 'utf8' });
+    return { content: [{ type: 'text', text: `email sent to ${to}: ${out.trim() || 'ok'}` }] };
+  } catch (e) {
+    return { content: [{ type: 'text', text: `send failed: ${e.message.split('\n')[0]}` }], isError: true };
+  }
+});
+
 // --- Activity tools ---
 server.tool('recent_activity', 'Show recent cross-agent activity', {
   limit: z.number().optional(),

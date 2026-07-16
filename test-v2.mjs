@@ -84,6 +84,15 @@ await T('leads list (auth)', async () => {
   const { status, data } = await j('GET', '/api/leads', { token: adminTok });
   assert.strictEqual(status, 200); assert.ok(Array.isArray(data));
 });
+await T('leads SEND (draft via SDK + real Gmail send)', async () => {
+  // create a throwaway lead to our own inbox (verifiable, no external spam)
+  const mk = await j('POST', '/api/leads', { body: { name: 'SendTest', email: 'admin.ai.masystem@gmail.com', interest: 'car' }, token: adminTok });
+  assert.strictEqual(mk.status, 200);
+  const id = db.prepare("SELECT id FROM leads WHERE email='admin.ai.masystem@gmail.com' ORDER BY id DESC LIMIT 1").get().id;
+  const { status, data } = await j('POST', `/api/leads/${id}/send`, { token: adminTok });
+  assert.strictEqual(status, 200); assert.ok(/sent/i.test(data.result), 'expected sent: ' + data.result);
+  db.prepare('DELETE FROM leads WHERE id=?').run(id); // cleanup
+});
 await T('status (public)', async () => {
   const { status, data } = await j('GET', '/api/status');
   assert.strictEqual(status, 200); assert.strictEqual(data.agents, 6);
