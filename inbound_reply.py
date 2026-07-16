@@ -112,8 +112,10 @@ def main():
             action = "UPDATED" if old_id else "CREATED"
             state["done"].append(mid)
             count += 1
-            msg = f"[{datetime.datetime.utcnow()}] id={mid} from={from_} -> draft {action} {'OK' if ok else 'FAIL'}: {reply[:80]}"
-            print(msg); open(LOG, "a").write(msg + "\n")
+            who = from_.split("<")[0].strip() or from_
+            # Telegram-friendly one-liner
+            print(f"📬 Draft {action} for {who} (Re: {subj[:40]}) → Gmail Drafts")
+            open(LOG, "a").write(f"[{datetime.datetime.utcnow()}] id={mid} from={from_} -> draft {action} {'OK' if ok else 'FAIL'}: {reply[:80]}\n")
         except Exception as e:
             err = f"[{datetime.datetime.utcnow()}] id={mid} ERROR {e}"
             print(err); open(LOG, "a").write(err + "\n")
@@ -122,7 +124,8 @@ def main():
     if count:
         with open(NOTIFY, "a") as f:
             f.write(f"{datetime.datetime.utcnow()} — drafted {count} inbound reply/replies (see Gmail Drafts)\n")
-    print(f"Processed {count} new message(s).")
+        print(f"✅ {count} inbound reply draft(s) → Gmail Drafts (review & send).")
+    # else: stay quiet on Telegram (no mail = no ping); detail in log only
 
 if __name__ == "__main__":
     main()
