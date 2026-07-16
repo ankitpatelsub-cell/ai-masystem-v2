@@ -10,6 +10,7 @@ import BackOfficePage from './pages/BackOfficePage';
 import ReelsPage from './pages/ReelsPage';
 import LeadsPage from './pages/LeadsPage';
 import SettingsPage from './pages/SettingsPage';
+import UsersPage from './pages/UsersPage';
 import Login from './pages/Login';
 
 const NAV = [
@@ -21,6 +22,7 @@ const NAV = [
   { to: '/backoffice', ic: '🤖', lbl: 'Back-Office' },
   { to: '/reels', ic: '🎬', lbl: 'Reels' },
   { to: '/leads', ic: '📥', lbl: 'Leads' },
+  { to: '/users', ic: '👥', lbl: 'Users' },
   { to: '/settings', ic: '⚙️', lbl: 'Settings' },
 ];
 
@@ -75,6 +77,7 @@ export default function App() {
                 <Route path="/backoffice" element={<BackOfficePage />} />
                 <Route path="/reels" element={<ReelsPage />} />
                 <Route path="/leads" element={<LeadsPage />} />
+                <Route path="/users" element={<UsersPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

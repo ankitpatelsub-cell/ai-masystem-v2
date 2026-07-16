@@ -18,7 +18,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuth(d.token, d.refreshToken);
     setUser(d.user);
   };
-  const logout = () => { clearAuth(); setUser(null); };
+  const logout = async () => {
+    const r = localStorage.getItem('mas_refresh');
+    try { if (r) await fetch('/api/auth/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ refreshToken: r }) }); } catch {}
+    clearAuth(); setUser(null);
+  };
 
   return <AuthCtx.Provider value={{ user, login, logout, loading }}>{children}</AuthCtx.Provider>;
 }
