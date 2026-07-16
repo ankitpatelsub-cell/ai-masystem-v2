@@ -39,16 +39,34 @@ def read_msg(mid):
 
 def draft_reply(from_, subj, body):
     prompt = (
-        "You are MASystem Admin (Nihon Offshore). A prospect/emily replied to our AI-agent outreach. "
-        "Write a SHORT, warm, professional reply (under 120 words). Thank them, offer a 5-minute demo, "
-        "ask one clarifying question. No subject line, no headers — just the reply body.\n\n"
+        "You are MASystem Admin, representing Nihon Offshore — a Japan⇄India offshore AI development team. "
+        "A prospect has replied to our AI-agent outreach email. Write a reply that is genuinely warm, "
+        "polite, and human (not salesy). Conventions:\n"
+        "  - Open with a sincere thank-you for their reply.\n"
+        "  - Acknowledge something specific they said.\n"
+        "  - Graciously offer a short (5-minute) demo at a time that suits THEM — give them an easy out.\n"
+        "  - Ask ONE gentle, open clarifying question.\n"
+        "  - Keep it under 130 words, friendly but professional, sign off as 'Warm regards, MASystem Admin'.\n"
+        "  - No subject line, no headers — just the reply body.\n\n"
         f"Original subject: {subj}\nFrom: {from_}\nTheir message:\n{body[:800]}"
     )
-    # call the SDK agent runner (free local Claude CLI)
     r = run([NODE, "/root/ai-masystem-v2/server/agent_runner.mjs", prompt])
     return r.stdout.strip()
 
-def save_draft(to, subj, body):
+def find_draft(subj):
+    """Return the envelope id of an existing 'Re: <subj>' draft, if any."""
+    out = run([HIMALAYA, "envelope", "list", "--folder", "[Gmail]/Drafts"]).stdout
+    wanted = f"Re: {subj}"
+    for line in out.splitlines():
+        if wanted in line:
+            m = re.match(r"\|\s*(\d+)\s*\|", line)
+            if m: return int(m.group(1))
+    return None
+
+def update_draft(to, subj, body, old_id=None):
+    """Save a fresh draft; if an old one exists, delete it first (one draft per thread)."""
+    if old_id is not None:
+        run([HIMALAYA, "message", "delete", "--folder", "[Gmail]/Drafts", str(old_id)])
     date = datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S +0000")
     raw = f"To: {to}\r\nFrom: admin.ai.masystem@gmail.com\r\nSubject: Re: {subj}\r\nDate: {date}\r\n\r\n{body}\r\n"
     r = run([HIMALAYA, "message", "save", "--folder", "[Gmail]/Drafts"], input=raw)
@@ -77,10 +95,24 @@ def main():
                 log.write(f"[{datetime.datetime.utcnow()}] id={mid} SKIP (draft empty/limited) — will retry\n"); log.close()
                 continue
             to = from_.split("<")[-1].rstrip(">") if "<" in from_ else from_
-            ok = save_draft(to, subj, reply)
+            # revise the reply using the lead's CURRENT status (if we have it)
+            status_note = ""
+            try:
+                import sqlite3
+                con = sqlite3.connect(os.environ.get("DB_PATH", "/root/ai-masystem-v2/masystem.db"))
+                row = con.execute("SELECT status FROM leads WHERE email=? OR name=? ORDER BY id DESC LIMIT 1", (to, from_)).fetchone()
+                con.close()
+                if row and row[0] and row[0] not in ("new",):
+                    status_note = f"\n\n[Context: this lead is currently marked '{row[0]}' in our pipeline.]"
+            except Exception:
+                pass
+            reply = (reply + status_note).strip()
+            old_id = find_draft(subj)
+            ok = update_draft(to, subj, reply, old_id)
+            action = "UPDATED" if old_id else "CREATED"
             state["done"].append(mid)
             count += 1
-            msg = f"[{datetime.datetime.utcnow()}] id={mid} from={from_} -> draft {'OK' if ok else 'FAIL'}: {reply[:80]}"
+            msg = f"[{datetime.datetime.utcnow()}] id={mid} from={from_} -> draft {action} {'OK' if ok else 'FAIL'}: {reply[:80]}"
             print(msg); open(LOG, "a").write(msg + "\n")
         except Exception as e:
             err = f"[{datetime.datetime.utcnow()}] id={mid} ERROR {e}"
