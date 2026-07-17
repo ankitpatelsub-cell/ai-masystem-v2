@@ -46,13 +46,16 @@ export async function runAgent(systemPrompt, prompt, opts = {}) {
   return text.trim();
 }
 
-// CLI quick-test: node agent_runner.mjs "summarize tickets"
+// CLI quick-test: node agent_runner.mjs "task" [--system "persona"]
 if (process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/^.*\//, ''))) {
-  const task = process.argv[2] || 'summarize the latest leads in 3 bullets';
-  const res = await runAgent(
-    'You are the MASystem back-office agent. Use the MCP DB tools to answer.',
-    task,
-  );
+  const args = process.argv.slice(2);
+  let task = '';
+  let system = 'You are the MASystem back-office agent. Use the MCP DB tools to answer.';
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--system') { system = args[i + 1]; i++; }
+    else if (!task) task = args[i];
+  }
+  const res = await runAgent(system, task || 'summarize the latest leads in 3 bullets');
   console.log('AGENT:', res);
   process.exit(0);
 }

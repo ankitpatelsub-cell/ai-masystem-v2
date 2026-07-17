@@ -20,6 +20,31 @@ router.patch('/:id', requirePerm('leads:manage'), (req,res)=>{
   if(owner) db.prepare('UPDATE leads SET owner=? WHERE id=?').run(owner, req.params.id);
   res.json({ok:true});
 });
+// Personalized first-touch: business-specific outreach (not generic template).
+router.post('/:id/draft-personal', requirePerm('leads:manage'), async (req,res)=>{
+  const lead = db.prepare('SELECT * FROM leads WHERE id=?').get(req.params.id);
+  if(!lead) return res.status(404).json({error:'lead not found'});
+  const { runAgent } = await import('../agent_runner.mjs');
+  const draft = await runAgent(
+    'You are the MASystem outreach agent (Nihon Offshore, Japan<->India offshore AI dev). Write a SHORT, warm, business-SPECIFIC outreach email body (no subject/headers). Reference the lead’s actual name, segment, and city. Offer a 5-minute demo. Under 130 words.',
+    'Draft a personalized outreach email for this REAL lead: name=' + lead.name + ', segment=' + (lead.interest||'our AI agents') + ', website=' + (lead.company||'none') + ', city/address=' + ((lead.message||'').slice(0,80)) + ', email=' + lead.email + '. Make it feel hand-written, not templated.',
+    { maxTurns: 15 }
+  );
+  res.json({ ok:true, draft });
+});
+// Summarize a lead's thread/replies into lead.summary (context for next draft).
+router.post('/:id/summarize', requirePerm('leads:manage'), async (req,res)=>{
+  const lead = db.prepare('SELECT * FROM leads WHERE id=?').get(req.params.id);
+  if(!lead) return res.status(404).json({error:'lead not found'});
+  const { runAgent } = await import('../agent_runner.mjs');
+  const summary = await runAgent(
+    'You are a CRM analyst. Summarize the lead’s history in 2-3 sentences for the next agent to act on.',
+    'Summarize lead ' + lead.name + ' (segment ' + lead.interest + ', status ' + lead.status + '). Original note: ' + ((lead.message||'none').slice(0,200)) + '. Current summary so far: ' + ((lead.summary||'none')) + '. Produce a concise updated summary.',
+    { maxTurns: 10 }
+  );
+  db.prepare('UPDATE leads SET summary=? WHERE id=?').run(summary, req.params.id);
+  res.json({ ok:true, summary });
+});
 // Draft (via SDK agent) + REALLY send (via MCP send_lead_email) a lead-outreach email.
 router.post('/:id/send', requirePerm('leads:manage'), async (req,res)=>{
   const lead = db.prepare('SELECT * FROM leads WHERE id=?').get(req.params.id);
@@ -38,7 +63,7 @@ router.post('/:id/send', requirePerm('leads:manage'), async (req,res)=>{
     const date = new Date().toUTCString().replace('GMT','+0000');
     const raw = `To: ${lead.email}\r\nFrom: admin.ai.masystem@gmail.com\r\nSubject: ${subject}\r\nDate: ${date}\r\n\r\n${draft}\r\n`;
     const out = execFileSync(HIMALAYA, ['message','send'], { input: raw, encoding: 'utf8' });
-    db.prepare("UPDATE leads SET status='contacted' WHERE id=?").run(req.params.id);
+    db.prepare("UPDATE leads SET status='contacted', last_contact_at=strftime('%s','now') WHERE id=?").run(req.params.id);
     result = 'sent: ' + (out.trim()||'ok');
   } catch(e){ result = 'send failed: ' + e.message.split('\n')[0]; }
   res.json({ ok:true, result });
@@ -46,7 +71,7 @@ router.post('/:id/send', requirePerm('leads:manage'), async (req,res)=>{
 // Real data source: scrape live businesses via the maps skill -> insert as leads.
 router.post('/ingest-maps', requirePerm('leads:manage'), async (req,res)=>{
   const { spawn } = await import('child_process');
-  const py = spawn('python3', ['ingest_maps.py'], { cwd: process.cwd(), env: { ...process.env, DB_PATH: process.env.DB_PATH || '/root/ai-masystem-v2/masystem.db' } });
+  const py = spawn('python3', ['/root/ai-masystem-v2/ingest_maps.py'], { cwd: '/root/ai-masystem-v2', env: { ...process.env, DB_PATH: process.env.DB_PATH || '/root/ai-masystem-v2/masystem.db' } });
   let out = ''; py.stdout.on('data', d => out += d); py.stderr.on('data', d => out += d);
   py.on('close', code => res.json({ ok: true, exit: code, log: out.slice(-500) }));
 });
@@ -54,7 +79,7 @@ router.post('/ingest-maps', requirePerm('leads:manage'), async (req,res)=>{
 // Enrich missing emails for maps leads (site-derived + LLM-guessed) so they become sendable.
 router.post('/enrich', requirePerm('leads:manage'), async (req,res)=>{
   const { spawn } = await import('child_process');
-  const py = spawn('python3', ['enrich_emails.py'], { cwd: process.cwd(), env: { ...process.env, DB_PATH: process.env.DB_PATH || '/root/ai-masystem-v2/masystem.db' } });
+  const py = spawn('python3', ['/root/ai-masystem-v2/enrich_emails.py'], { cwd: '/root/ai-masystem-v2', env: { ...process.env, DB_PATH: process.env.DB_PATH || '/root/ai-masystem-v2/masystem.db' } });
   let out = ''; py.stdout.on('data', d => out += d); py.stderr.on('data', d => out += d);
   py.on('close', code => res.json({ ok: true, exit: code, log: out.slice(-500) }));
 });

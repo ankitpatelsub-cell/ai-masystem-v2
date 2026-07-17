@@ -93,10 +93,20 @@ await T('leads SEND (draft via SDK + real Gmail send)', async () => {
   assert.strictEqual(status, 200); assert.ok(/sent/i.test(data.result), 'expected sent: ' + data.result);
   db.prepare('DELETE FROM leads WHERE id=?').run(id); // cleanup
 });
-await T('leads enrich endpoint accepts', async () => {
-  const { status } = await j('POST', '/api/leads/enrich', { token: adminTok });
-  assert.strictEqual(status, 200); // returns immediately; child enriches in bg
+await T('ai-features: score endpoint accepts (bg)', async () => {
+  const { status } = await j('POST', '/api/ai/score', { token: adminTok });
+  assert.strictEqual(status, 200);
   await new Promise(r => setTimeout(r, 1000));
+});
+await T('ai-features: content endpoint accepts (bg)', async () => {
+  const { status } = await j('POST', '/api/ai/content', { token: adminTok });
+  assert.strictEqual(status, 200);
+  await new Promise(r => setTimeout(r, 500));
+});
+await T('leads draft-personal endpoint accepts (bg AI call)', async () => {
+  const { status } = await j('POST', '/api/leads/1/draft-personal', { token: adminTok });
+  assert.strictEqual(status, 200);
+  await new Promise(r => setTimeout(r, 500));
 });
 await T('leads ingest-maps endpoint accepts (real source)', async () => {
   const { status } = await j('POST', '/api/leads/ingest-maps', { token: adminTok });
