@@ -10,7 +10,7 @@ DB = os.environ.get("DB_PATH", "/root/ai-masystem-v2/masystem.db")
 def main():
     rescored = "--all" in sys.argv
     con = sqlite3.connect(DB)
-    rows = con.execute("SELECT id,name,company,email,interest,message,source FROM leads WHERE score IS NULL OR score='' OR ?", (1 if rescored else 0,)).fetchall()
+    rows = con.execute("SELECT id,name,company,email,interest,message,source FROM leads WHERE score IS NULL OR score='' OR score='0' OR ?", (1 if rescored else 0,)).fetchall()
     print(f"Scoring {len(rows)} leads...")
     done = 0
     for r in rows:
@@ -24,6 +24,10 @@ def main():
         )
         j = claude.ask_json(prompt, system="You are a B2B lead qualification analyst. Be concise, output strict JSON.")
         if not j or "score" not in j:
+            # CLI capped / no response — mark score='0' so we don't loop forever; retry later with --all
+            con.execute("UPDATE leads SET score='0', priority='warm' WHERE id=?", (id_,))
+            con.commit()
+            print(f"  id={id_} {name}: SKIPPED (no score, CLI capped?)")
             continue
         con.execute("UPDATE leads SET score=?, priority=?, tags=? WHERE id=?",
                     (str(j.get("score")), j.get("priority","warm"), json.dumps(j.get("tags",[])), id_))
