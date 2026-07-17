@@ -50,4 +50,12 @@ router.post('/ingest-maps', requirePerm('leads:manage'), async (req,res)=>{
   let out = ''; py.stdout.on('data', d => out += d); py.stderr.on('data', d => out += d);
   py.on('close', code => res.json({ ok: true, exit: code, log: out.slice(-500) }));
 });
+
+// Enrich missing emails for maps leads (site-derived + LLM-guessed) so they become sendable.
+router.post('/enrich', requirePerm('leads:manage'), async (req,res)=>{
+  const { spawn } = await import('child_process');
+  const py = spawn('python3', ['enrich_emails.py'], { cwd: process.cwd(), env: { ...process.env, DB_PATH: process.env.DB_PATH || '/root/ai-masystem-v2/masystem.db' } });
+  let out = ''; py.stdout.on('data', d => out += d); py.stderr.on('data', d => out += d);
+  py.on('close', code => res.json({ ok: true, exit: code, log: out.slice(-500) }));
+});
 export default router;

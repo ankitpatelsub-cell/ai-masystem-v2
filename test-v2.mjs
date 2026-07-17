@@ -93,6 +93,11 @@ await T('leads SEND (draft via SDK + real Gmail send)', async () => {
   assert.strictEqual(status, 200); assert.ok(/sent/i.test(data.result), 'expected sent: ' + data.result);
   db.prepare('DELETE FROM leads WHERE id=?').run(id); // cleanup
 });
+await T('leads enrich endpoint accepts', async () => {
+  const { status } = await j('POST', '/api/leads/enrich', { token: adminTok });
+  assert.strictEqual(status, 200); // returns immediately; child enriches in bg
+  await new Promise(r => setTimeout(r, 1000));
+});
 await T('leads ingest-maps endpoint accepts (real source)', async () => {
   const { status } = await j('POST', '/api/leads/ingest-maps', { token: adminTok });
   assert.strictEqual(status, 200); // returns immediately; child scrapes in bg

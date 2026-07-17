@@ -24,3 +24,14 @@ hospital @ Ahmedabad, Gujarat: 15 found, 14 kept
 hospital @ Gandhinagar, Gujarat: 15 found, 15 kept
 hospital @ Surat, Gujarat: 15 found, 15 kept
 hospital @ Vadodara, Gujarat: 15 found, 15 kept
+hotel @ Ahmedabad, Gujarat: 15 found, 15 kept
+hotel @ Surat, Gujarat: 4 found, 4 kept
+hotel @ Vadodara, Gujarat: 9 found, 9 kept
+hotel @ Rajkot, Gujarat: 15 found, 14 kept
+car_rental @ Ahmedabad, Gujarat: 0 found, 0 kept
+car_rental @ Surat, Gujarat: 0 found, 0 kept
+dentist @ Ahmedabad, Gujarat: 15 found, 15 kept
+
+Total real prospects: 115
+Inserted 0 new real leads into /root/ai-masystem-v2/masystem.db
+[Fri Jul 17 01:11:02 UTC 2026] maps ingest done (exit 0)

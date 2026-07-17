@@ -7,6 +7,7 @@ export default function LeadsPage() {
   const [err, setErr] = useState('');
   const [sending, setSending] = useState<number | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [enriching, setEnriching] = useState(false);
   const [note, setNote] = useState('');
 
   const load = () => { api('GET', '/api/leads').then(setLeads).catch(e => setErr(e.message)); };
@@ -34,6 +35,15 @@ export default function LeadsPage() {
     } catch (e: any) { setNote('Maps sync failed: ' + e.message); }
     setSyncing(false);
   }
+  async function enrich() {
+    setEnriching(true); setNote('Enriching missing emails (site-derived + LLM-guessed)…');
+    try {
+      const d = await api('POST', '/api/leads/enrich');
+      setNote(`Enrich done (exit ${d.exit}): ${d.log?.split('\n').slice(-3).join(' ')}`);
+      load();
+    } catch (e: any) { setNote('Enrich failed: ' + e.message); }
+    setEnriching(false);
+  }
 
   return (
     <>
@@ -43,7 +53,8 @@ export default function LeadsPage() {
         {note && <div className="muted" style={{ color: 'var(--brand)', marginBottom: 10 }}>{note}</div>}
         <div style={{ marginBottom: 12, display: 'flex', gap: 10, alignItems: 'center' }}>
           <button className="btn" disabled={syncing} onClick={syncMaps}>{syncing ? 'Scraping live businesses…' : '🌐 Sync real leads (Maps)'}</button>
-          <span className="muted" style={{ fontSize: 12 }}>pulls live hospitals/hotels from maps into the pipeline</span>
+          <button className="btn" disabled={enriching} onClick={enrich}>{enriching ? 'Finding emails…' : '✉️ Enrich emails'}</button>
+          <span className="muted" style={{ fontSize: 12 }}>pulls live hospitals/hotels from maps; enriches missing emails so leads become sendable</span>
         </div>
         <table>
           <thead><tr><th>Name</th><th>Email</th><th>Interest</th><th>Status</th><th>Send</th><th>When</th></tr></thead>
