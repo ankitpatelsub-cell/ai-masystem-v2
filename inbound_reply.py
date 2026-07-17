@@ -125,7 +125,9 @@ def main():
         with open(NOTIFY, "a") as f:
             f.write(f"{datetime.datetime.utcnow()} — drafted {count} inbound reply/replies (see Gmail Drafts)\n")
         print(f"✅ {count} inbound reply draft(s) → Gmail Drafts (review & send).")
-    # else: stay quiet on Telegram (no mail = no ping); detail in log only
+    else:
+        # always emit output so the cron reports OK (not "error" on empty stdout)
+        print(f"ℹ️ Inbound check {datetime.datetime.utcnow():%Y-%m-%d %H:%M} UTC — no new mail to draft.")
 
 if __name__ == "__main__":
     main()

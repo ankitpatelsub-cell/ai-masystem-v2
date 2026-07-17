@@ -14,3 +14,13 @@ dentist @ Ahmedabad, Gujarat: 15 found, 15 kept
 Total real prospects: 115
 Inserted 86 new real leads into /root/ai-masystem-v2/masystem.db
 [Thu Jul 16 17:14:54 UTC 2026] done (exit 0) rows now: 0
+[Fri Jul 17 01:03:38 UTC 2026] starting maps ingest
+hospital @ Ahmedabad, Gujarat: 15 found, 14 kept
+hospital @ Gandhinagar, Gujarat: 15 found, 15 kept
+hospital @ Surat, Gujarat: 15 found, 15 kept
+hospital @ Vadodara, Gujarat: 15 found, 15 kept
+[Fri Jul 17 01:06:43 UTC 2026] maps ingest starting
+hospital @ Ahmedabad, Gujarat: 15 found, 14 kept
+hospital @ Gandhinagar, Gujarat: 15 found, 15 kept
+hospital @ Surat, Gujarat: 15 found, 15 kept
+hospital @ Vadodara, Gujarat: 15 found, 15 kept
