@@ -14,6 +14,7 @@ import ReminderPage from './pages/ReminderPage';
 import ReviewsPage from './pages/ReviewsPage';
 import TranslatePage from './pages/TranslatePage';
 import BillingPage from './pages/BillingPage';
+import AnalyticsPage from './pages/AnalyticsPage';
 import SettingsPage from './pages/SettingsPage';
 import UsersPage from './pages/UsersPage';
 import PermissionsPage from './pages/PermissionsPage';
@@ -33,6 +34,7 @@ const NAV = [
   { to: '/reviews', ic: '⭐', lbl: 'Reviews' },
   { to: '/translate', ic: '🌐', lbl: 'Translate' },
   { to: '/billing', ic: '💳', lbl: 'Billing' },
+  { to: '/analytics', ic: '📊', lbl: 'Analytics' },
   { to: '/users', ic: '👥', lbl: 'Users' },
   { to: '/permissions', ic: '🔐', lbl: 'Roles' },
   { to: '/settings', ic: '⚙️', lbl: 'Settings' },
@@ -94,6 +96,7 @@ export default function App() {
                 <Route path="/reviews" element={<ReviewsPage />} />
                 <Route path="/translate" element={<TranslatePage />} />
                 <Route path="/billing" element={<BillingPage />} />
+                <Route path="/analytics" element={<AnalyticsPage />} />
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/permissions" element={<PermissionsPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
