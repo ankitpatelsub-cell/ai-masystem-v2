@@ -9,7 +9,7 @@ export default function Login() {
   const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
   async function go(e: any) {
     e.preventDefault(); setBusy(true); setErr('');
-    try { await login(u, p); nav('/'); } catch (e: any) { setErr(e.message || 'login failed'); } finally { setBusy(false); }
+    try { await login(u, p); nav('/overview'); } catch (e: any) { setErr(e.message || 'login failed'); } finally { setBusy(false); }
   }
   return (
     <div id="login">

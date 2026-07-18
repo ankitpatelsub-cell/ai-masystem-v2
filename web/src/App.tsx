@@ -19,9 +19,10 @@ import SettingsPage from './pages/SettingsPage';
 import UsersPage from './pages/UsersPage';
 import PermissionsPage from './pages/PermissionsPage';
 import Login from './pages/Login';
+import Landing from './pages/Landing';
 
 const NAV = [
-  { to: '/', ic: '🏠', lbl: 'Overview', end: true },
+  { to: '/overview', ic: '🏠', lbl: 'Overview', end: true },
   { to: '/car', ic: '🚗', lbl: 'Car Sales' },
   { to: '/hospital', ic: '🏥', lbl: 'Hospital' },
   { to: '/hotel', ic: '🏨', lbl: 'Hotel' },
@@ -80,10 +81,12 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/landing" element={<Landing />} />
           <Route path="/*" element={
             <RequireAuth>
               <Routes>
-                <Route path="/" element={<Overview />} />
+                <Route path="/overview" element={<Overview />} />
                 <Route path="/car" element={<CarPage />} />
                 <Route path="/hospital" element={<HospitalPage />} />
                 <Route path="/hotel" element={<HotelPage />} />
