@@ -28,7 +28,7 @@ export default function Landing() {
       </header>
 
       <section style={{ textAlign: 'center', padding: '60px 6vw 40px', animation: 'fadeSlideUp .6s ease both' }}>
-        <div className="badge ok" style={{ marginBottom: 18 }}>● Japan ⇄ India · AI Operations</div>
+        <div className="badge ok" style={{ marginBottom: 18 }}>● AI agents for Indian business · 24/7</div>
         <h1 style={{ fontSize: 'clamp(34px,6vw,60px)', fontWeight: 900, lineHeight: 1.05, background: 'var(--grad)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent', marginBottom: 18 }}>
           AI agents that run your front desk
         </h1>
@@ -79,7 +79,7 @@ export default function Landing() {
 
       <footer style={{ borderTop: '1px solid var(--line)', marginTop: 40, padding: '28px 6vw', textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
         <div className="brand" style={{ justifyContent: 'center', marginBottom: 8 }}><span className="dot"></span><span>MASystem</span></div>
-        <div>Nihon Offshore · Japan⇄India AI · <a href="mailto:admin.ai.masystem@gmail.com" style={{ color: 'var(--brand)' }}>admin.ai.masystem@gmail.com</a></div>
+        <div>Nihon Offshore · AI agents for India & Japan · <a href="mailto:admin.ai.masystem@gmail.com" style={{ color: 'var(--brand)' }}>admin.ai.masystem@gmail.com</a></div>
         <div style={{ marginTop: 8, fontSize: 11, opacity: .7 }}>© {new Date().getFullYear()} AI MASystem. All rights reserved.</div>
       </footer>
     </div>
