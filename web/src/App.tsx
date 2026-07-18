@@ -53,10 +53,10 @@ function Sidebar() {
         ))}
       </nav>
       <div className="me">
-        <div className="avatar">{user?.username?.[0]?.toUpperCase() || 'A'}</div>
+        <div className="avatar">{(user?.name || user?.username || 'A')?.[0]?.toUpperCase()}</div>
         <div className="meta" style={{ flex: 1 }}>
-          <div style={{ fontWeight: 700, fontSize: 13 }}>{user?.name || user?.username}</div>
-          <div className="muted" style={{ fontSize: 11 }}>{user?.role}</div>
+          <div style={{ fontWeight: 700, fontSize: 13 }}>{user?.name || user?.role}</div>
+          <div className="muted" style={{ fontSize: 11 }}>{user?.role ? user.role[0].toUpperCase() + user.role.slice(1) : ''}</div>
         </div>
         <button className="chip" onClick={() => { logout(); nav('/login'); }}>Exit</button>
       </div>

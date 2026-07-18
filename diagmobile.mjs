@@ -1,0 +1,24 @@
+import pkg from '/root/.npm/_npx/e41f203b7505f1fb/node_modules/playwright/index.js';
+const { chromium } = pkg;
+const browser = await chromium.launch();
+const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+const page = await ctx.newPage();
+const errors = [];
+page.on('pageerror', e => errors.push('PAGEERROR: ' + e.message));
+await page.goto('https://masystem.co.in/login', { waitUntil: 'networkidle' });
+await page.fill('input[placeholder="username"]', 'admin');
+await page.fill('input[placeholder="password"]', 'MASys@9205a6c968d7');
+await page.click('button.btn');
+await page.waitForTimeout(2500);
+await page.goto('https://masystem.co.in/overview', { waitUntil: 'networkidle' });
+await page.waitForTimeout(1000);
+// measure sidebar + main overlap
+const side = await page.$('.side');
+const sb = side ? await side.boundingBox() : null;
+const main = await page.$('.main');
+const mb = main ? await main.boundingBox() : null;
+console.log('sidebar box:', JSON.stringify(sb));
+console.log('main box:', JSON.stringify(mb));
+console.log('horizontal overflow? docWidth=', await page.evaluate(()=>document.documentElement.scrollWidth), 'winWidth=', await page.evaluate(()=>window.innerWidth));
+console.log('errors:', errors.join(' | ') || '(none)');
+await browser.close();
