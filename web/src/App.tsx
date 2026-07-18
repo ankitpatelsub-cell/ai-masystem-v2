@@ -9,6 +9,11 @@ import ManagerPage from './pages/ManagerPage';
 import BackOfficePage from './pages/BackOfficePage';
 import ReelsPage from './pages/ReelsPage';
 import LeadsPage from './pages/LeadsPage';
+import SdrPage from './pages/SdrPage';
+import ReminderPage from './pages/ReminderPage';
+import ReviewsPage from './pages/ReviewsPage';
+import TranslatePage from './pages/TranslatePage';
+import BillingPage from './pages/BillingPage';
 import SettingsPage from './pages/SettingsPage';
 import UsersPage from './pages/UsersPage';
 import PermissionsPage from './pages/PermissionsPage';
@@ -23,6 +28,11 @@ const NAV = [
   { to: '/backoffice', ic: '🤖', lbl: 'Back-Office' },
   { to: '/reels', ic: '🎬', lbl: 'Reels' },
   { to: '/leads', ic: '📥', lbl: 'Leads' },
+  { to: '/sdr', ic: '📣', lbl: 'SDR Outreach' },
+  { to: '/reminder', ic: '⏰', lbl: 'Reminders' },
+  { to: '/reviews', ic: '⭐', lbl: 'Reviews' },
+  { to: '/translate', ic: '🌐', lbl: 'Translate' },
+  { to: '/billing', ic: '💳', lbl: 'Billing' },
   { to: '/users', ic: '👥', lbl: 'Users' },
   { to: '/permissions', ic: '🔐', lbl: 'Roles' },
   { to: '/settings', ic: '⚙️', lbl: 'Settings' },
@@ -79,6 +89,11 @@ export default function App() {
                 <Route path="/backoffice" element={<BackOfficePage />} />
                 <Route path="/reels" element={<ReelsPage />} />
                 <Route path="/leads" element={<LeadsPage />} />
+                <Route path="/sdr" element={<SdrPage />} />
+                <Route path="/reminder" element={<ReminderPage />} />
+                <Route path="/reviews" element={<ReviewsPage />} />
+                <Route path="/translate" element={<TranslatePage />} />
+                <Route path="/billing" element={<BillingPage />} />
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/permissions" element={<PermissionsPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
