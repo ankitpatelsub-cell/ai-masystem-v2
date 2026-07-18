@@ -10,8 +10,9 @@ export default function LeadsPage() {
   const [enriching, setEnriching] = useState(false);
   const [scoring, setScoring] = useState(false);
   const [note, setNote] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const load = () => { api('GET', '/api/leads').then(setLeads).catch(e => setErr(e.message)); };
+  const load = () => { api('GET', '/api/leads').then(d => { setLeads(d); setLoading(false); }).catch(e => { setErr(e.message); setLoading(false); }); };
   useEffect(() => { load(); }, []);
 
   async function setStatus(id: number, status: string) {
@@ -83,28 +84,40 @@ export default function LeadsPage() {
           <button className="btn" disabled={scoring} onClick={score}>{scoring ? 'Scoring…' : '🎯 Score & prioritize'}</button>
           <span className="muted" style={{ fontSize: 12 }}>real maps leads → enriched emails → Claude scores/prioritizes → sendable</span>
         </div>
-        <table>
-          <thead><tr><th>Name</th><th>Email</th><th>Interest</th><th>Score</th><th>Priority</th><th>Tags</th><th>Status</th><th>Actions</th><th>When</th></tr></thead>
-          <tbody>{leads.map((l: any) => (
-            <tr key={l.id}>
-              <td><b>{l.name}</b></td>
-              <td>{l.email}</td>
-              <td>{l.interest}</td>
-              <td>{l.score || '—'}</td>
-              <td>{l.priority || '—'}</td>
-              <td className="muted" style={{ fontSize: 11 }}>{(l.tags ? JSON.parse(l.tags || '[]').join(', ') : '')}</td>
-              <td><select value={l.status} onChange={e => setStatus(l.id, e.target.value)} style={{ width: 110 }}>
-                {['new', 'contacted', 'demo', 'won', 'lost'].map(s => <option key={s} value={s}>{s}</option>)}
-              </select></td>
-              <td style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                <button className="btn" disabled={sending === l.id} onClick={() => sendEmail(l.id)}>{sending === l.id ? '…' : '✉️ Send'}</button>
-                <button className="btn" disabled={sending === l.id} onClick={() => personalDraft(l.id)}>✍️ Personal</button>
-                <button className="btn" onClick={() => summarize(l.id)}>🧠 Summarize</button>
-              </td>
-              <td className="muted">{new Date(l.created_at * 1000).toLocaleDateString()}</td>
-            </tr>
-          ))}</tbody>
-        </table>
+        {loading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {Array.from({ length: 5 }).map((_, i) => <div className="skeleton" style={{ height: 44, borderRadius: 10 }} key={i}></div>)}
+          </div>
+        ) : leads.length === 0 ? (
+          <div className="empty-state">
+            <div className="es-ic">📭</div>
+            <div className="es-title">No leads yet</div>
+            <div className="es-sub">Sync real leads from Maps to get started.</div>
+          </div>
+        ) : (
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Interest</th><th>Score</th><th>Priority</th><th>Tags</th><th>Status</th><th>Actions</th><th>When</th></tr></thead>
+            <tbody>{leads.map((l: any) => (
+              <tr key={l.id}>
+                <td><b>{l.name}</b></td>
+                <td>{l.email}</td>
+                <td>{l.interest}</td>
+                <td>{l.score || '—'}</td>
+                <td>{l.priority || '—'}</td>
+                <td className="muted" style={{ fontSize: 11 }}>{(l.tags ? JSON.parse(l.tags || '[]').join(', ') : '')}</td>
+                <td><select value={l.status} onChange={e => setStatus(l.id, e.target.value)} style={{ width: 110 }}>
+                  {['new', 'contacted', 'demo', 'won', 'lost'].map(s => <option key={s} value={s}>{s}</option>)}
+                </select></td>
+                <td style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                  <button className="btn" disabled={sending === l.id} onClick={() => sendEmail(l.id)}>{sending === l.id ? '…' : '✉️ Send'}</button>
+                  <button className="btn" disabled={sending === l.id} onClick={() => personalDraft(l.id)}>✍️ Personal</button>
+                  <button className="btn" onClick={() => summarize(l.id)}>🧠 Summarize</button>
+                </td>
+                <td className="muted">{new Date(l.created_at * 1000).toLocaleDateString()}</td>
+              </tr>
+            ))}</tbody>
+          </table>
+        )}
       </div>
     </>
   );
