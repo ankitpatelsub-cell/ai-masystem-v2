@@ -9,11 +9,14 @@ export default function Login() {
   const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
   async function go(e: any) {
     e.preventDefault(); setBusy(true); setErr('');
-    try { await login(u, p); nav('/overview'); } catch (e: any) { setErr(e.message || 'login failed'); } finally { setBusy(false); }
+    try { await login(u, p); nav('/overview'); }
+    catch (e: any) { console.error('[login] failed:', e); setErr(e?.message || (typeof e === 'string' ? e : 'login failed')); }
+    finally { setBusy(false); }
   }
   return (
     <div id="login">
       <form className="box" onSubmit={go}>
+        <a onClick={() => nav('/')} style={{ alignSelf: 'flex-start', marginBottom: 14, color: 'var(--muted)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>← Back to home</a>
         <div className="login-mark">M</div>
         <div className="brand" style={{ justifyContent: 'center', marginBottom: 6 }}><span className="dot"></span><span>MASystem</span></div>
         <h2>Welcome back</h2>
