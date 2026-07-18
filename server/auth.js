@@ -21,8 +21,9 @@ function signRefresh(user) {
   return tok;
 }
 
-// POST /api/auth/register  (admin only can create users; first run anyone can)
-router.post('/register', async (req, res) => {
+// POST /api/auth/register  (admin only — creating the very first user must go through
+// a DB-level seed, not this HTTP endpoint, so there is no unauthenticated bootstrap path)
+router.post('/register', requireAuth(['admin']), async (req, res) => {
   const { username, password, name, email, role } = req.body || {};
   if (!username || !password) return res.status(400).json({ error: 'username + password required' });
   const exists = db.prepare('SELECT id FROM users WHERE username=?').get(username);
