@@ -24,7 +24,7 @@ export default function Login() {
           {busy && <span className="spinner"></span>}{busy ? 'Signing in…' : 'Sign in'}
         </button>
         <div id="mutederr">{err}</div>
-        <div className="muted" style={{ marginTop: 10, fontSize: 11.5 }}>First admin: <b>admin</b> / your ADMIN_PASS</div>
+        <div className="muted" style={{ marginTop: 10, fontSize: 11.5 }}>Authorized personnel only · contact your administrator for access</div>
       </form>
     </div>
   );

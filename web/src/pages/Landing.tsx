@@ -36,7 +36,7 @@ export default function Landing() {
           MASystem is a multi-agent platform that handles patient intake, hotel concierge, outreach and reviews — automating the busywork so your team talks to people, not phones.
         </p>
         <div className="row" style={{ justifyContent: 'center' }}>
-          <a className="btn" href="mailto:admin.ai.masystem@gmail.com?subject=AI%20agent%20demo%20request">📩 Request a demo</a>
+          <a className="btn" href="mailto:admin.ai.masystem@gmail.com?subject=AI%20agent%20demo%20request" onClick={(e) => { e.preventDefault(); window.location.href = 'mailto:admin.ai.masystem@gmail.com?subject=AI%20agent%20demo%20request'; }}>📩 Request a demo</a>
           <button className="btn ghost" style={{ background: 'var(--card2)', border: '1px solid var(--line)' }} onClick={() => nav('/login')}>Login to dashboard →</button>
         </div>
       </section>
