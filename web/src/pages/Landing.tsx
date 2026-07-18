@@ -22,9 +22,8 @@ export default function Landing() {
   const nav = useNavigate();
   return (
     <div style={{ minHeight: '100vh' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 6vw', maxWidth: 1200, margin: '0 auto' }}>
+      <header style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', padding: '20px 6vw', maxWidth: 1200, margin: '0 auto' }}>
         <div className="brand"><span className="dot"></span><span>MASystem</span></div>
-        <button className="btn ghost" style={{ background: 'var(--card2)', border: '1px solid var(--line)' }} onClick={() => nav('/login')}>Login →</button>
       </header>
 
       <section style={{ textAlign: 'center', padding: '60px 6vw 40px', animation: 'fadeSlideUp .6s ease both' }}>
