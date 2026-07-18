@@ -9,10 +9,12 @@ MAPS = "/root/.hermes/profiles/agent2/skills/productivity/maps/scripts/maps_clie
 DB = os.environ.get("DB_PATH", "/root/ai-masystem-v2/masystem.db")
 
 TARGETS = [
-    ("hospital", ["Ahmedabad, Gujarat", "Gandhinagar, Gujarat", "Surat, Gujarat", "Vadodara, Gujarat"]),
-    ("hotel",    ["Ahmedabad, Gujarat", "Surat, Gujarat", "Vadodara, Gujarat", "Rajkot, Gujarat"]),
-    ("car_rental", ["Ahmedabad, Gujarat", "Surat, Gujarat"]),
-    ("dentist",  ["Ahmedabad, Gujarat"]),
+    ("hospital", ["Ahmedabad, Gujarat", "Gandhinagar, Gujarat", "Surat, Gujarat", "Vadodara, Gujarat", "Rajkot, Gujarat", "Mumbai, Maharashtra", "Pune, Maharashtra", "Delhi", "Bangalore, Karnataka", "Jaipur, Rajasthan"]),
+    ("hotel",    ["Ahmedabad, Gujarat", "Surat, Gujarat", "Vadodara, Gujarat", "Rajkot, Gujarat", "Mumbai, Maharashtra", "Pune, Maharashtra", "Delhi", "Goa", "Jaipur, Rajasthan", "Bangalore, Karnataka"]),
+    ("car_rental", ["Ahmedabad, Gujarat", "Surat, Gujarat", "Mumbai, Maharashtra", "Pune, Maharashtra", "Delhi", "Bangalore, Karnataka"]),
+    ("dentist",  ["Ahmedabad, Gujarat", "Surat, Gujarat", "Vadodara, Gujarat", "Mumbai, Maharashtra", "Pune, Maharashtra", "Delhi", "Bangalore, Karnataka"]),
+    ("clinic",   ["Ahmedabad, Gujarat", "Mumbai, Maharashtra", "Pune, Maharashtra", "Delhi", "Bangalore, Karnataka"]),
+    ("salon",    ["Ahmedabad, Gujarat", "Mumbai, Maharashtra", "Pune, Maharashtra", "Delhi", "Bangalore, Karnataka"]),
 ]
 
 def nearby(near, cat, radius=10000, limit=15):

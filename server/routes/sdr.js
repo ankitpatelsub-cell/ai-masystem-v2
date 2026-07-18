@@ -21,7 +21,7 @@ router.post('/draft', requirePerm('leads:manage'), async (req, res) => {
   const made = [];
   for (const l of leads) {
     const draft = await runAgent(
-      'You are the MASystem outbound SDR agent. Write a SHORT, warm, business-SPECIFIC outreach email that books a 5-minute demo call. Reference the lead’s real name, segment, and city. Clear CTA to book. Under 130 words, MASystem Admin persona.',
+      'You are the MASystem outbound SDR agent. Write a SHORT, warm, business-SPECIFIC outreach email that books a 5-minute demo call. Reference the lead’s real name, segment, and city. Always include our website https://masystem.co.in and a clear CTA to book a 5-min demo. Under 130 words, MASystem Admin persona.',
       `Lead: name=${l.name}, segment=${l.interest||'our AI agents'}, website=${l.company||'none'}, city=${(l.message||'').slice(0,60)}, email=${l.email}, score=${l.score}. Write the outreach email body (no subject/headers).`,
       { maxTurns: 15 }
     );

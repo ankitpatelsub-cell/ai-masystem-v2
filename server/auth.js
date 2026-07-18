@@ -5,11 +5,27 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import db from './db.js';
 
-const SECRET = process.env.JWT_SECRET || 'replace-with-long-random-jwt-secret';
+const SECRET = process.env.JWT_SECRET;
+if (!SECRET) { console.error('FATAL: JWT_SECRET is not set — refusing to start with a guessable default.'); process.exit(1); }
 const TOKEN_TTL = 60 * 60 * 12; // 12h access
 const REFRESH_TTL = 60 * 60 * 24 * 30; // 30d
+export const VALID_ROLES = ['admin', 'staff', 'viewer'];
 
 const router = express.Router();
+
+// Per-IP rate limit for credential endpoints (in-memory; resets on restart).
+// req.ip is always 127.0.0.1 behind Caddy, so trust the first X-Forwarded-For hop.
+const RL_WINDOW = 15 * 60 * 1000, RL_MAX = 10;
+const rlHits = new Map();
+function rateLimit(req, res, next) {
+  const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.ip;
+  const now = Date.now();
+  let h = rlHits.get(ip);
+  if (!h || now > h.resetAt) { h = { count: 0, resetAt: now + RL_WINDOW }; rlHits.set(ip, h); }
+  if (++h.count > RL_MAX) return res.status(429).json({ error: 'too many attempts, try later' });
+  if (rlHits.size > 10000) for (const [k, v] of rlHits) if (now > v.resetAt) rlHits.delete(k);
+  next();
+}
 
 function signAccess(user) {
   return jwt.sign({ uid: user.id, username: user.username, role: user.role }, SECRET, { expiresIn: TOKEN_TTL });
@@ -23,9 +39,10 @@ function signRefresh(user) {
 
 // POST /api/auth/register  (admin only — creating the very first user must go through
 // a DB-level seed, not this HTTP endpoint, so there is no unauthenticated bootstrap path)
-router.post('/register', requireAuth(['admin']), async (req, res) => {
+router.post('/register', rateLimit, requireAuth(['admin']), async (req, res) => {
   const { username, password, name, email, role } = req.body || {};
   if (!username || !password) return res.status(400).json({ error: 'username + password required' });
+  if (role && !VALID_ROLES.includes(role)) return res.status(400).json({ error: 'invalid role' });
   const exists = db.prepare('SELECT id FROM users WHERE username=?').get(username);
   if (exists) return res.status(409).json({ error: 'username taken' });
   const hash = bcrypt.hashSync(password, 10);
@@ -35,7 +52,7 @@ router.post('/register', requireAuth(['admin']), async (req, res) => {
 });
 
 // POST /api/auth/login
-router.post('/login', async (req, res) => {
+router.post('/login', rateLimit, async (req, res) => {
   const { username, password } = req.body || {};
   const u = db.prepare('SELECT * FROM users WHERE username=?').get(username);
   if (!u || !bcrypt.compareSync(password || '', u.password_hash)) return res.status(401).json({ error: 'invalid credentials' });

@@ -26,7 +26,7 @@ router.post('/:id/draft-personal', requirePerm('leads:manage'), async (req,res)=
   if(!lead) return res.status(404).json({error:'lead not found'});
   const { runAgent } = await import('../agent_runner.mjs');
   const draft = await runAgent(
-    'You are the MASystem outreach agent (Nihon Offshore, Japan<->India offshore AI dev). Write a SHORT, warm, business-SPECIFIC outreach email body (no subject/headers). Reference the lead’s actual name, segment, and city. Offer a 5-minute demo. Under 130 words.',
+    'You are the MASystem outreach agent (Nihon Offshore, Japan<->India offshore AI dev). Write a SHORT, warm, business-SPECIFIC outreach email body (no subject/headers). Reference the lead’s actual name, segment, and city. Offer a 5-minute demo and always include our website https://masystem.co.in. Under 130 words.',
     'Draft a personalized outreach email for this REAL lead: name=' + lead.name + ', segment=' + (lead.interest||'our AI agents') + ', website=' + (lead.company||'none') + ', city/address=' + ((lead.message||'').slice(0,80)) + ', email=' + lead.email + '. Make it feel hand-written, not templated.',
     { maxTurns: 15 }
   );
@@ -53,7 +53,7 @@ router.post('/:id/send', requirePerm('leads:manage'), async (req,res)=>{
   try {
     const draft = await (await import('../agent_runner.mjs')).runAgent(
       'You are the MASystem outreach agent. Write a concise, professional outreach email body (no subject, no headers) for the lead described.',
-      `Draft an outreach email for: name=${lead.name}, interest=${lead.interest||'our AI agents'}, email=${lead.email}. Keep it under 120 words, MASystem Admin persona, 5-minute demo CTA.`,
+      `Draft an outreach email for: name=${lead.name}, interest=${lead.interest||'our AI agents'}, email=${lead.email}. Keep it under 120 words, MASystem Admin persona, 5-minute demo CTA, and include our website https://masystem.co.in.`,
       { maxTurns: 15 }
     );
     const subject = `AI agent demo for ${lead.name} — 5 min?`;

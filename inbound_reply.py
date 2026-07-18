@@ -46,6 +46,7 @@ def draft_reply(from_, subj, body):
         "  - Acknowledge something specific they said.\n"
         "  - Graciously offer a short (5-minute) demo at a time that suits THEM — give them an easy out.\n"
         "  - Ask ONE gentle, open clarifying question.\n"
+        "  - Mention our website https://masystem.co.in if relevant (e.g. inviting them to see a demo online).\n"
         "  - Keep it under 130 words, friendly but professional, sign off as 'Warm regards, MASystem Admin'.\n"
         "  - No subject line, no headers — just the reply body.\n\n"
         f"Original subject: {subj}\nFrom: {from_}\nTheir message:\n{body[:800]}"
