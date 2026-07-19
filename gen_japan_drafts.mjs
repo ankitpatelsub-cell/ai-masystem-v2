@@ -20,13 +20,13 @@ function rawMsg(name, segLabel, phone, site) {
   const body =
 `${name} 御中
 
-はじめまして。MA System（日本⇄インドのオフショアAI開発）のMASystem Adminです。
-当社は病院受付・ホテル予約・歯科窓口などの「AI受付エージェント」を提供し、お客様対応の自動化を支援しています。待ち時間の短縮や直接予約の増加に実績があります。
+はじめまして。MA System（日本⇄インドのオフショアAI開発）のMASystem Adminと申します。
+私たちは病院受付・ホテル予約・歯科窓口などの「AI受付エージェント」を提供し、お客様対応の自動化をサポートしております。お待たせ時間の短縮や直接予約の増加など、これまでに多くの実績がございます。
 
-5分のオンラインデモをご用意できます。プラットフォームはこちら：
+もしご関心をお持ちでしたら、ぜひ下記までお気軽にメールでお問い合わせください。詳しい資料やデモのご案内をお送りいたします。お返事を心よりお待ちしております。
+
+プラットフォームはこちら：
 ${SITE}
-
-ご都合のよいお時間をお知らせいただければ、そちらに合わせます。
 
 MA System（日本⇄インドAI開発）
 ${SITE}
@@ -36,17 +36,17 @@ ${phone ? 'TEL: ' + phone : ''}
 ---
 Hello ${name},
 
-I'm MASystem Admin from MA System (Japan⇄India offshore AI development). We build AI reception agents for hospitals, hotels, and dental clinics — automating patient/customer intake, reminders, and follow-ups. We help cut wait times and capture more direct bookings.
+I hope this message finds you well. I'm MASystem Admin from MA System (Japan⇄India offshore AI development). We build AI reception agents for hospitals, hotels, and dental clinics — automating patient and customer intake, reminders, and follow-ups, with a track record of reducing wait times and increasing direct bookings.
 
-We'd love to show you in a 5-minute demo. See our live platform: ${SITE}
+If this is of interest, we would be delighted to hear from you. Please feel free to email us at your convenience — we'd be happy to share more details or arrange a short demo. No pressure at all; we simply welcome the chance to connect.
 
-Would a quick 5-min call this week work?
+You can also explore our live platform here: ${SITE}
 
 Warm regards,
 MASystem Admin
 MA System (Japan⇄India AI dev)
 ${SITE} | ${FROM}`;
-  const headers = `From: ${FROM}\nTo: ${toEmail || name}\nSubject: AI受付エージェントのご提案（MA System） / AI reception agent intro — ${name}\nDate: ${new Date().toUTCString()}\n\n`;
+  const headers = `From: ${FROM}\nTo: ${toEmail || name}\nSubject: MA System（AI受付エージェント）のご紹介 / Introduction from MA System — ${name}\nDate: ${new Date().toUTCString()}\n\n`;
   return { raw: headers + body, toEmail };
 }
 
