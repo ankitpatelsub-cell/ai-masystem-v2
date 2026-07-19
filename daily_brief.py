@@ -16,7 +16,7 @@ def main():
     top_str = "; ".join(f"{n} ({i}, score {s})" for n,i,s in top)
     con.close()
     prompt = (
-        f"Write a short MORNING BRIEF for the MASystem (Nihon Offshore) lead-gen team. Facts: "
+        f"Write a short MORNING BRIEF for the MASystem (MA System) lead-gen team. Facts: "
         f"{total} total leads, {today} new in last 24h, {hot} hot, {contacted} contacted. "
         f"Top 5 by score: {top_str}. "
         "In 5-7 bullets: what changed, who to prioritize today, one suggested action. Use emojis. Plain text, no markdown headers."

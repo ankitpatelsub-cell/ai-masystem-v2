@@ -20,7 +20,7 @@ def main():
         con.close(); return
     id_, name, email, interest, company, message, score = lead
     prompt = (
-        f"You are the MASystem Manager agent (Nihon Offshore). Execute outreach for this lead end-to-end. "
+        f"You are the MASystem Manager agent (MA System). Execute outreach for this lead end-to-end. "
         f"Lead: {name}, segment {interest}, website {company or 'none'}, location {(message or '')[:60]}, email {email}, score {score}. "
         "Draft a warm, business-SPECIFIC first-touch email (no subject/headers, under 130 words) offering a 5-min demo. Return ONLY the email body."
     )

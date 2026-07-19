@@ -15,7 +15,7 @@ function rawMsg(name, segment, email, city) {
   const body =
 `Hi ${name},
 
-I'm MASystem Admin from Nihon Offshore. We build AI agents that handle patient/hotel/customer intake, reminders, and follow-ups automatically - so your team talks to people, not phones.
+I'm MASystem Admin from MA System. We build AI agents that handle patient/hotel/customer intake, reminders, and follow-ups automatically - so your team talks to people, not phones.
 
 We already help ${segLabel} businesses cut wait times and capture more direct bookings. Happy to show you in a 5-minute demo.
 
@@ -25,7 +25,7 @@ Would a quick 5-min call this week work? I'll fit your schedule.
 
 Warm regards,
 MASystem Admin
-Nihon Offshore - ${SITE}
+MA System - ${SITE}
 ${FROM}`;
   return `From: ${FROM}\nTo: ${email}\nSubject: AI agent demo for ${name} - 5 min?\nDate: ${new Date().toUTCString()}\n\n${body}`;
 }

@@ -18,7 +18,7 @@ def main():
         seg = interest or "business"
         city = (message or "").split(",")[0][:40] if message else ""
         prompt = (
-            f"Rate this lead's fit for Nihon Offshore's AI agent services (Japan<->India offshore dev: hospital reception AI, hotel concierge AI, car-rental AI, dental front-desk AI). "
+            f"Rate this lead's fit for MA System's AI agent services (Japan<->India offshore dev: hospital reception AI, hotel concierge AI, car-rental AI, dental front-desk AI). "
             f"Business: name='{name}', segment='{seg}', city hint='{city}', has website={'yes' if company else 'no'}, source='{source}'.\n"
             "Return ONLY JSON: {\"score\":<0-100 int>,\"priority\":\"hot|warm|cold\",\"tags\":[\"<max 3 short tags like 'hospital','ahmedabad','high-volume'>]\"}"
         )

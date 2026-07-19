@@ -15,7 +15,7 @@ def write(name, text):
 def main():
     # Service descriptions
     svcs = claude.ask(
-        "For Nihon Offshore / AI MASystem (Japan<->India offshore AI dev): write 4 short SEO service blurbs "
+        "For MA System / AI MASystem (Japan<->India offshore AI dev): write 4 short SEO service blurbs "
         "(hospital reception AI, hotel concierge AI, car-rental AI, dental front-desk AI). Each: title + 2 sentences + 3 bullet benefits. Markdown.",
         system="You are a B2B SaaS copywriter.")
     if svcs: write("services.md", svcs)
@@ -28,7 +28,7 @@ def main():
     # Blog post
     blog = claude.ask(
         "Write an SEO blog post (~400 words) titled 'Why Indian Hospitals Are Automating Front Desks with AI Agents'. "
-        "Include: problem, how AI reception agents help, Nihon Offshore's Japan-India advantage, a CTA. Markdown with H2 sections.",
+        "Include: problem, how AI reception agents help, MA System's Japan-India advantage, a CTA. Markdown with H2 sections.",
         system="You are an AI-industry content writer.")
     if blog: write("blog-hospital-ai.md", blog)
     print("Content generation done.")

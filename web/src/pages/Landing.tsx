@@ -78,7 +78,7 @@ export default function Landing() {
 
       <footer style={{ borderTop: '1px solid var(--line)', marginTop: 40, padding: '28px 6vw', textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
         <div className="brand" style={{ justifyContent: 'center', marginBottom: 8 }}><span className="dot"></span><span>MASystem</span></div>
-        <div>Nihon Offshore · AI agents for India & Japan · <a href="mailto:admin.ai.masystem@gmail.com" style={{ color: 'var(--brand)' }}>admin.ai.masystem@gmail.com</a></div>
+        <div>MA System · AI agents for India & Japan · <a href="mailto:admin.ai.masystem@gmail.com" style={{ color: 'var(--brand)' }}>admin.ai.masystem@gmail.com</a></div>
         <div style={{ marginTop: 8, fontSize: 11, opacity: .7 }}>© {new Date().getFullYear()} AI MASystem. All rights reserved.</div>
       </footer>
     </div>
