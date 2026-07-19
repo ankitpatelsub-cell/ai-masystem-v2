@@ -39,7 +39,7 @@ def read_msg(mid):
 
 def draft_reply(from_, subj, body):
     prompt = (
-        "You are MASystem Admin, representing MA System — a Japan⇄India offshore AI development team. "
+        "You are MASystem Admin. "
         "A prospect has replied to our AI-agent outreach email. Write a reply that is genuinely warm, "
         "polite, and human (not salesy). Conventions:\n"
         "  - Open with a sincere thank-you for their reply.\n"

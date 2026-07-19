@@ -41,7 +41,7 @@ export default function Landing() {
       </section>
 
       <section style={{ display: 'flex', justifyContent: 'center', gap: 28, flexWrap: 'wrap', padding: '10px 6vw 40px' }}>
-        {[['235+', 'Real leads engaged'], ['11', 'Production AI agents'], ['2', 'Markets: JP ⇄ IN']].map(([v, k]) => (
+        {[['235+', 'Real leads engaged'], ['11', 'Production AI agents'], ['4', 'Industry verticals']].map(([v, k]) => (
           <div key={k} style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 30, fontWeight: 900, background: 'var(--grad)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>{v}</div>
             <div className="muted" style={{ fontSize: 12, fontWeight: 700 }}>{k}</div>
@@ -78,7 +78,7 @@ export default function Landing() {
 
       <footer style={{ borderTop: '1px solid var(--line)', marginTop: 40, padding: '28px 6vw', textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
         <div className="brand" style={{ justifyContent: 'center', marginBottom: 8 }}><span className="dot"></span><span>MASystem</span></div>
-        <div>MA System · AI agents for India & Japan · <a href="mailto:admin.ai.masystem@gmail.com" style={{ color: 'var(--brand)' }}>admin.ai.masystem@gmail.com</a></div>
+        <div><a href="mailto:admin.ai.masystem@gmail.com" style={{ color: 'var(--brand)' }}>admin.ai.masystem@gmail.com</a></div>
         <div style={{ marginTop: 8, fontSize: 11, opacity: .7 }}>© {new Date().getFullYear()} AI MASystem. All rights reserved.</div>
       </footer>
     </div>

@@ -26,7 +26,7 @@ router.post('/:id/draft-personal', requirePerm('leads:manage'), async (req,res)=
   if(!lead) return res.status(404).json({error:'lead not found'});
   const { runAgent } = await import('../agent_runner.mjs');
   const draft = await runAgent(
-    'You are the MASystem outreach agent (MA System, Japan<->India offshore AI dev). Write a SHORT, warm, business-SPECIFIC outreach email body (no subject/headers). Reference the lead’s actual name, segment, and city. Offer a 5-minute demo and always include our website https://masystem.co.in. Under 130 words.',
+    'You are the MASystem outreach agent. Write a SHORT, warm, business-SPECIFIC outreach email body (no subject/headers). Reference the lead’s actual name, segment, and city. Offer a 5-minute demo and always include our website https://masystem.co.in. Under 130 words.',
     'Draft a personalized outreach email for this REAL lead: name=' + lead.name + ', segment=' + (lead.interest||'our AI agents') + ', website=' + (lead.company||'none') + ', city/address=' + ((lead.message||'').slice(0,80)) + ', email=' + lead.email + '. Make it feel hand-written, not templated.',
     { maxTurns: 15 }
   );

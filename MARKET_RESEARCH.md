@@ -1,4 +1,4 @@
-# AI MASystem / Nihon Offshore — Market Research
+# AI MASystem — Market Research
 
 **Date:** 2026-07-18
 **Scope:** India (Ahmedabad/Gujarat → national) and Japan, for the four vertical agents (hospital, hotel, dental, car-rental) plus the orchestrator/back-office/Reels agents.
@@ -37,7 +37,7 @@
 | Company | Market | Category | Approx. pricing model |
 |---|---|---|---|
 | Practo | India | Doctor discovery, booking, clinic EMR (Practo Ray) | Subscription, ~₹1,000–5,000+/month per clinic depending on modules |
-| eZee Technosys (Rajkot, Gujarat-based) | India (global) | Hotel PMS + AI chat add-ons | Subscription per property, ~$20–100+/month; local comp in the same region as Nihon Offshore |
+| eZee Technosys (Rajkot, Gujarat-based) | India (global) | Hotel PMS + AI chat add-ons | Subscription per property, ~$20–100+/month; local comp in the same region |
 | Hotelogix | India | Cloud hotel PMS | Subscription per property |
 | Yellow.ai | India (global) | Enterprise conversational AI platform | Enterprise contracts, often ₹lakhs/year — priced for large accounts, not SMBs |
 | Haptik (Reliance-owned) | India | Conversational AI / CX bots | Enterprise contracts |
@@ -60,7 +60,7 @@
 | Model | Fit for India SMB | Notes |
 |---|---|---|
 | Pure one-time license | Historically common, but low-margin and no recurring revenue | Avoid as primary model — it's the trap most legacy Indian SME software fell into. |
-| Flat monthly subscription per location | **Best fit** | Predictable for the owner, predictable revenue for Nihon Offshore. Matches how eZee/Hotelogix/Practo already sell. |
+| Flat monthly subscription per location | **Best fit** | Predictable for the owner, predictable revenue. Matches how eZee/Hotelogix/Practo already sell. |
 | Low setup fee + monthly subscription | **Recommended default** | Small upfront fee (covers onboarding/config) funds initial cost without scaring off the buyer with pure one-time pricing; monthly fee builds recurring revenue. This is also the Japanese SaaS norm (初期費用 + 月額), so one pricing structure can span both markets. |
 | Per-seat pricing | Poor fit | Front desks in this segment are almost always 1 person — per-seat adds no value and complicates the pitch. |
 | Per-query / usage-based | Risky | SMB owners in India dislike unpredictable bills; usage pricing works better as an *overage* on top of a flat tier, not as the primary model. |

@@ -36,7 +36,7 @@ ${phone ? 'TEL: ' + phone : ''}
 ---
 Hello ${name},
 
-I hope this message finds you well. I'm MASystem Admin from MA System (Japan⇄India offshore AI development). We build AI reception agents for hospitals, hotels, and dental clinics — automating patient and customer intake, reminders, and follow-ups, with a track record of reducing wait times and increasing direct bookings.
+I hope this message finds you well. I'm MASystem Admin. We build AI reception agents for hospitals, hotels, and dental clinics — automating patient and customer intake, reminders, and follow-ups, with a track record of reducing wait times and increasing direct bookings.
 
 If this is of interest, we would be delighted to hear from you. Please feel free to email us at your convenience — we'd be happy to share more details or arrange a short demo. No pressure at all; we simply welcome the chance to connect.
 
@@ -44,7 +44,6 @@ You can also explore our live platform here: ${SITE}
 
 Warm regards,
 MASystem Admin
-MA System (Japan⇄India AI dev)
 ${SITE} | ${FROM}`;
   const headers = `From: ${FROM}\nTo: ${toEmail || name}\nSubject: MA System（AI受付エージェント）のご紹介 / Introduction from MA System — ${name}\nDate: ${new Date().toUTCString()}\n\n`;
   return { raw: headers + body, toEmail };
