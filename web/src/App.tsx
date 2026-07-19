@@ -46,7 +46,6 @@ function Sidebar() {
   return (
     <aside className="side">
       <div className="brand"><span className="dot"></span><span>MASystem</span></div>
-      <div className="sub">Japan⇄India · AI</div>
       <nav className="nav">
         {NAV.map(n => (
           <a key={n.to} className={loc.pathname === n.to ? 'on' : ''} onClick={() => nav(n.to)}><span className="ic">{n.ic}</span><span className="lbl">{n.lbl}</span></a>
