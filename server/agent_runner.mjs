@@ -1,22 +1,55 @@
-// agent_runner.mjs — run an agent via @anthropic-ai/claude-agent-sdk,
-// connected to our MCP DB server (free local Claude CLI, no paid API).
+// agent_runner.mjs — run an agent via local Claude CLI (free) or Codex CLI.
+// Provider is selected by MODEL_PROVIDER env: 'claude' (default), 'codex', or 'auto'.
 import { query } from '@anthropic-ai/claude-agent-sdk';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+const execFileP = promisify(execFile);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const MCP_SERVER = path.join(__dirname, 'mcp-server.mjs');
+const CODEX_BIN = process.env.CODEX_BIN || '/root/.hermes/node/bin/codex';
 
-// MCP config pointing at our stdio server.
-// SDK option mcpServers expects { name: {type,command,args,env} } (it wraps it).
+const PROVIDER = (process.env.MODEL_PROVIDER || 'claude').toLowerCase();
+
+// MCP config pointing at our stdio server (used by the Claude path).
 const mcpServers = {
   'ai-masystem-db': {
     type: 'stdio',
-    command: process.execPath, // node
+    command: process.execPath,
     args: [MCP_SERVER],
     env: { DB_PATH: process.env.DB_PATH || '/root/ai-masystem-v2/masystem.db', HOME: process.env.HOME || '/root' },
   },
 };
+
+/** Run a task via the Codex CLI (spawns `codex exec`, prompt via stdin file for clean EOF). */
+async function runViaCodex(systemPrompt, prompt, opts = {}) {
+  const full = (systemPrompt ? systemPrompt + '\n\n' : '') + prompt;
+  const fs = await import('fs');
+  const os = await import('os');
+  const pathMod = await import('path');
+  const tmp = pathMod.join(os.tmpdir(), `codex_prompt_${process.pid}_${Date.now()}.txt`);
+  fs.writeFileSync(tmp, full);
+  try {
+    const { stdout, stderr } = await execFileP('/bin/bash', [
+      '-c',
+      `"${CODEX_BIN}" exec --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox < "${tmp}"`,
+    ], {
+      cwd: __dirname,
+      maxBuffer: 4 * 1024 * 1024,
+      timeout: (opts.maxTurns || 20) * 15000 + 30000,
+      env: { ...process.env },
+    });
+    const raw = (stdout || '').trim() || (stderr || '').trim();
+    const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+    const ci = lines.findIndex(l => l === 'codex');
+    if (ci >= 0 && lines[ci + 1]) return lines[ci + 1];
+    return raw;
+  } finally {
+    try { fs.unlinkSync(tmp); } catch {}
+  }
+}
 
 /**
  * Run an agentic task. Returns the final text result.
@@ -25,6 +58,10 @@ const mcpServers = {
  * @param {object} opts - { allowedTools, maxTurns }
  */
 export async function runAgent(systemPrompt, prompt, opts = {}) {
+  if (PROVIDER === 'codex') {
+    return await runViaCodex(systemPrompt, prompt, opts);
+  }
+  // default: local Claude CLI (free)
   const out = query({
     prompt,
     options: {
@@ -33,7 +70,6 @@ export async function runAgent(systemPrompt, prompt, opts = {}) {
       mcpServers,
       allowedTools: opts.allowedTools || ['mcp__ai-masystem-db__query_leads', 'mcp__ai-masystem-db__recent_activity', 'mcp__ai-masystem-db__hospital_queue', 'mcp__ai-masystem-db__hotel_bookings', 'mcp__ai-masystem-db__query_cars', 'mcp__ai-masystem-db__add_lead', 'mcp__ai-masystem-db__set_lead_status'],
       maxTurns: opts.maxTurns || 20,
-      // NOTE: bypassPermissions is blocked under root; use default + allowedTools.
     },
   });
 
