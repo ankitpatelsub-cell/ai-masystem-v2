@@ -35,13 +35,16 @@ router.post('/draft', requirePerm('leads:manage'), async (req, res) => {
 router.post('/:id/send', requirePerm('leads:manage'), async (req, res) => {
   const task = db.prepare('SELECT * FROM sdr_tasks WHERE id=?').get(req.params.id);
   if (!task) return res.status(404).json({ error: 'task not found' });
-  const { execFileSync } = await import('child_process');
-  const HIMALAYA = '/root/.local/bin/himalaya';
-  const subject = `AI agent demo for ${task.name} — 5 min?`;
-  const date = new Date().toUTCString().replace('GMT', '+0000');
-  const raw = `To: ${task.email}\r\nFrom: admin.ai.masystem@gmail.com\r\nSubject: ${subject}\r\nDate: ${date}\r\n\r\n${task.draft}\r\n`;
   try {
-    const out = execFileSync(HIMALAYA, ['message', 'send'], { input: raw, encoding: 'utf8' });
+    let out = 'mock delivery accepted';
+    if (process.env.EMAIL_TRANSPORT !== 'mock') {
+      const { execFileSync } = await import('child_process');
+      const HIMALAYA = '/root/.local/bin/himalaya';
+      const subject = `AI agent demo for ${task.name} — 5 min?`;
+      const date = new Date().toUTCString().replace('GMT', '+0000');
+      const raw = `To: ${task.email}\r\nFrom: admin.ai.masystem@gmail.com\r\nSubject: ${subject}\r\nDate: ${date}\r\n\r\n${task.draft}\r\n`;
+      out = execFileSync(HIMALAYA, ['message', 'send'], { input: raw, encoding: 'utf8' });
+    }
     db.prepare("UPDATE sdr_tasks SET status='sent', sent=1 WHERE id=?").run(task.id);
     db.prepare("UPDATE leads SET status='contacted' WHERE id=?").run(task.lead_id);
     logActivity('sdr', '📤', 'SDR email sent', `${task.name} (${task.segment})`);

@@ -1,15 +1,32 @@
-// src/pages/HospitalPage.tsx
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ChatPanel from '../components/ChatPanel';
+import { api } from '../lib/api';
+
+const day = () => new Date().toISOString().slice(0, 10);
 
 export default function HospitalPage() {
-  const [lang, setLang] = useState('en');
-  return (
-    <>
-      <div className="top"><div><h1>🏥 Hospital Queue Agent</h1><div className="sub">Patient intake · token · surge alerts (EN/HI/JA)</div></div></div>
-      <ChatPanel agent="🏥" endpoint="/api/hospital/intake" langState={[lang, setLang]}
-        examples={['My name is Rajesh, fever since morning', 'मुझे पेट दर्द है', 'What is my queue position?']}
-        placeholder="Patient message…" />
-    </>
-  );
+  const [lang, setLang] = useState('en'); const [doctors, setDoctors] = useState<any[]>([]); const [doctorId, setDoctorId] = useState(''); const [date, setDate] = useState(day());
+  const [metrics, setMetrics] = useState<any>({}); const [appointments, setAppointments] = useState<any[]>([]); const [queue, setQueue] = useState<any[]>([]); const [note, setNote] = useState(''); const [history, setHistory] = useState<any>(null);
+  const loadDoctors = () => api('GET', '/api/hospital/doctors').then((rows: any) => { setDoctors(rows); if (!doctorId && rows[0]) setDoctorId(String(rows[0].id)); }).catch(e => setNote(e.message));
+  const load = async () => { if (!doctorId) return; try { const [m, a, q]: any = await Promise.all([api('GET', `/api/hospital/metrics?date=${date}`), api('GET', `/api/hospital/appointments?date=${date}&doctorId=${doctorId}`), api('GET', `/api/hospital/queue?date=${date}&doctorId=${doctorId}`)]); setMetrics(m); setAppointments(a); setQueue(q); } catch (e: any) { setNote(e.message); } };
+  useEffect(() => { loadDoctors(); }, []); useEffect(() => { load(); }, [doctorId, date]);
+  async function action(path: string, message: string) { try { await api('POST', path); setNote(message); await load(); } catch (e: any) { setNote(e.message); } }
+  async function urgent(id: number) { const reason = window.prompt('Reason for priority override (required):'); if (!reason) return; try { await api('POST', `/api/hospital/appointments/${id}/priority`, { priority: 'urgent', reason }); setNote('Priority override recorded.'); await load(); } catch (e: any) { setNote(e.message); } }
+  async function transfer(id: number) { const destination = window.prompt(`Transfer to doctor ID:\n${doctors.map(d => `${d.id}: ${d.name}`).join('\n')}`); if (!destination) return; try { await api('POST', `/api/hospital/queue/${id}/transfer`, { doctorId: Number(destination) }); setNote('Patient transferred and both queues recalculated.'); await load(); } catch (e: any) { setNote(e.message); } }
+  async function showHistory(id: number) { try { setHistory(await api('GET', `/api/hospital/appointments/${id}/history`)); } catch (e: any) { setNote(e.message); } }
+  async function blockTime() { const start = window.prompt('Block start time (HH:MM)', '12:00'), end = window.prompt('Block end time (HH:MM)', '13:00'); if (!start || !end) return; const startsAt = new Date(`${date}T${start}:00`).getTime(), endsAt = new Date(`${date}T${end}:00`).getTime(); try { await api('POST', '/api/hospital/schedule-blocks', { doctorId: Number(doctorId), startsAt, endsAt, reason: 'Staff schedule block' }); setNote('Time blocked; new bookings cannot select it.'); } catch (e: any) { setNote(e.message); } }
+  return <>
+    <div className="top"><div><h1>🏥 Hospital Booking & Queue</h1><div className="sub">Appointments · arrival check-in · live queue · staff controls</div></div></div>
+    {note && <div className="card" style={{ color: 'var(--brand)' }}>{note}</div>}
+    <div className="card"><div className="row"><label>Doctor<select aria-label="Queue doctor" value={doctorId} onChange={e => setDoctorId(e.target.value)}>{doctors.map(d => <option key={d.id} value={d.id}>{d.name} — {d.specialty}</option>)}</select></label><label>Date<input aria-label="Queue date" type="date" value={date} onChange={e => setDate(e.target.value)} /></label><button className="btn" onClick={load}>Refresh</button><button className="chip" onClick={blockTime}>Block time</button><a className="chip" href="/hospital/kiosk" target="_blank">Open kiosk</a><a className="chip" href={`/hospital/board?doctorId=${doctorId}`} target="_blank">Waiting board</a></div>
+      <div className="cards" style={{ marginTop: 16 }}>{[['Confirmed',metrics.booked],['Checked in',metrics.checkedIn],['In queue',queue.length],['Completed',metrics.completed],['Waitlisted',metrics.waitlisted],['Avg. wait',`${metrics.averageWaitMin || 0} min`],['Avg. service',`${metrics.averageServiceMin || 0} min`],['No-show',`${metrics.noShowRate || 0}%`]].map(([label,value]) => <div className="stat" key={String(label)}><b>{value ?? 0}</b><span>{label}</span></div>)}</div>
+    </div>
+    <div className="grid" style={{ gridTemplateColumns: 'minmax(0,1.2fr) minmax(300px,.8fr)' }}>
+      <div className="card"><h3>Today’s appointments</h3><table><thead><tr><th>Patient</th><th>Time</th><th>Status</th><th>Actions</th></tr></thead><tbody>{appointments.map(a => <tr key={a.id}><td><b>{a.patient_name}</b><div className="muted" style={{ fontSize: 11 }}>{a.reason || '—'} · {a.visit_type === 'walk_in' ? 'Walk-in' : 'Booked'}</div></td><td>{a.starts_at ? new Date(a.starts_at).toLocaleTimeString([], { hour:'numeric', minute:'2-digit' }) : 'Walk-in / waitlist'}</td><td><span className="pill">{a.status}</span></td><td style={{ display:'flex',gap:4,flexWrap:'wrap' }}>{a.status === 'confirmed' && <button className="chip" onClick={() => action(`/api/hospital/appointments/${a.id}/check-in`, 'Patient checked in.')}>Check in</button>}{a.status === 'checked_in' && <><button className="chip" onClick={() => action(`/api/hospital/queue/${a.id}/call`, 'Patient called.')}>Call</button><button className="chip" onClick={() => action(`/api/hospital/queue/${a.id}/skip`, 'Marked no-show.')}>Skip</button><button className="chip" onClick={() => urgent(a.id)}>Priority</button><button className="chip" onClick={() => transfer(a.id)}>Transfer</button></>}{a.status === 'called' && <button className="chip" onClick={() => action(`/api/hospital/queue/${a.id}/complete`, 'Consultation completed.')}>Complete</button>}<button className="chip" onClick={() => showHistory(a.id)}>History</button></td></tr>)}{appointments.length === 0 && <tr><td colSpan={4} className="muted">No appointments for this doctor and date.</td></tr>}</tbody></table></div>
+      <div className="card"><h3>Live queue</h3>{queue.length === 0 ? <div className="muted">No checked-in patients.</div> : queue.map(a => <div key={a.id} className="feed-item"><div className="fic">#{a.queue_number}</div><div><div className="ftitle">{a.patient_name} {a.priority === 'urgent' && '⚠️'}</div><div className="ftime">{a.status} · ~{a.estimated_wait_min} min</div></div></div>)}</div>
+    </div>
+    {history && <div className="card"><div className="row" style={{ justifyContent:'space-between' }}><h3>Appointment audit & notifications</h3><button className="chip" onClick={() => setHistory(null)}>Close</button></div>{history.events.map((e: any) => <p key={`e${e.id}`} className="muted">{new Date(e.created_at).toLocaleTimeString()} · {e.event_type} · {e.actor}{e.note ? ` — ${e.note}` : ''}</p>)}{history.notifications.map((n: any) => <p key={`n${n.id}`} className="muted">Notification: {n.kind} via {n.channel} · {n.status}</p>)}</div>}
+    <div className="top" style={{ marginTop: 24 }}><div><h2>Legacy intake assistant</h2><div className="sub">For assisted reception intake; use appointment booking for scheduled visits.</div></div></div>
+    <ChatPanel agent="🏥" endpoint="/api/hospital/intake" langState={[lang, setLang]} examples={['My name is Rajesh, fever since morning','मुझे पेट दर्द है','What is my queue position?']} placeholder="Patient message…" />
+  </>;
 }

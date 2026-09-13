@@ -13,6 +13,25 @@ const CODEX_BIN = process.env.CODEX_BIN || '/root/.hermes/node/bin/codex';
 
 const PROVIDER = (process.env.MODEL_PROVIDER || 'claude').toLowerCase();
 
+// Keeps automated integration tests deterministic and prevents them from invoking
+// a paid/interactive model provider. This is never enabled in normal runtime.
+async function runTestAgent(prompt) {
+  if (/create a lead/i.test(prompt)) {
+    const name = prompt.match(/name ['"]([^'"]+)['"]/i)?.[1] || 'Test Lead';
+    const email = prompt.match(/email ['"]([^'"]+)['"]/i)?.[1] || 'test@example.com';
+    const interest = prompt.match(/interest ['"]([^'"]+)['"]/i)?.[1] || '';
+    const { default: db } = await import('./db.js');
+    db.prepare('INSERT OR IGNORE INTO leads (name,email,interest,source,status) VALUES (?,?,?,?,?)')
+      .run(name, email, interest, 'test', 'new');
+    return `Created lead for ${name}.`;
+  }
+  if (/how many leads|count leads/i.test(prompt)) {
+    const { default: db } = await import('./db.js');
+    return String(db.prepare('SELECT COUNT(*) c FROM leads').get().c);
+  }
+  return 'Test agent response.';
+}
+
 // MCP config pointing at our stdio server (used by the Claude path).
 const mcpServers = {
   'ai-masystem-db': {
@@ -58,6 +77,7 @@ async function runViaCodex(systemPrompt, prompt, opts = {}) {
  * @param {object} opts - { allowedTools, maxTurns }
  */
 export async function runAgent(systemPrompt, prompt, opts = {}) {
+  if (process.env.AGENT_TEST_MODE === '1') return runTestAgent(prompt);
   if (PROVIDER === 'codex') {
     return await runViaCodex(systemPrompt, prompt, opts);
   }

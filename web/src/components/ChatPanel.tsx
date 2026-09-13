@@ -8,7 +8,8 @@ export default function ChatPanel({ agent, icon, endpoint, examples, placeholder
   const [hist, setHist] = useState<{ role: 'user' | 'agent' | 'typing'; icon?: string; text?: string; steps?: any[] }[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
-  const [lang, setLang] = langState || useState('en');
+  const [localLang, setLocalLang] = useState('en');
+  const [lang, setLang] = langState ?? [localLang, setLocalLang];
   const threadRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { threadRef.current?.scrollTo(0, threadRef.current.scrollHeight); }, [hist]);

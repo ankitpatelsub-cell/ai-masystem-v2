@@ -27,14 +27,17 @@ router.post('/invoice', requirePerm('leads:manage'), (req, res) => {
 router.post('/:id/remind', requirePerm('leads:manage'), async (req, res) => {
   const inv = db.prepare('SELECT * FROM invoices WHERE id=?').get(req.params.id);
   if (!inv) return res.status(404).json({ error: 'not found' });
-  const { execFileSync } = await import('child_process');
-  const HIMALAYA = '/root/.local/bin/himalaya';
-  const pay = inv.currency === 'JPY' ? 'PayPay' : 'UPI';
-  const body = `Dear ${inv.business},\n\nThis is a friendly reminder that invoice #${inv.id} for ${inv.amount} ${inv.currency} is due. You can pay instantly via ${pay}. Thank you for your business!\n\n— Team AI MASystem`;
-  const date = new Date().toUTCString().replace('GMT', '+0000');
-  const raw = `To: admin.ai.masystem@gmail.com\r\nFrom: admin.ai.masystem@gmail.com\r\nSubject: Payment Reminder — Invoice #${inv.id}\r\nDate: ${date}\r\n\r\n${body}\r\n`;
   try {
-    const out = execFileSync(HIMALAYA, ['message', 'send'], { input: raw, encoding: 'utf8' });
+    let out = 'mock delivery accepted';
+    if (process.env.EMAIL_TRANSPORT !== 'mock') {
+      const { execFileSync } = await import('child_process');
+      const HIMALAYA = '/root/.local/bin/himalaya';
+      const pay = inv.currency === 'JPY' ? 'PayPay' : 'UPI';
+      const body = `Dear ${inv.business},\n\nThis is a friendly reminder that invoice #${inv.id} for ${inv.amount} ${inv.currency} is due. You can pay instantly via ${pay}. Thank you for your business!\n\n— Team AI MASystem`;
+      const date = new Date().toUTCString().replace('GMT', '+0000');
+      const raw = `To: admin.ai.masystem@gmail.com\r\nFrom: admin.ai.masystem@gmail.com\r\nSubject: Payment Reminder — Invoice #${inv.id}\r\nDate: ${date}\r\n\r\n${body}\r\n`;
+      out = execFileSync(HIMALAYA, ['message', 'send'], { input: raw, encoding: 'utf8' });
+    }
     db.prepare("UPDATE invoices SET reminder_sent=1 WHERE id=?").run(inv.id);
     logActivity('billing', '💳', 'Payment reminder sent', `Invoice #${inv.id} (${inv.amount} ${inv.currency})`);
     res.json({ ok: true, result: out.trim() });

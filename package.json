@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "DB_PATH=/root/ai-masystem-v2/masystem.db HOME=/root node test-v2.mjs",
+    "test": "RESET_TEST_DB=1 AGENT_TEST_MODE=1 EMAIL_TRANSPORT=mock ADMIN_PASS=ShreeAuto@2026 ADMIN_PW=ShreeAuto@2026 JWT_SECRET=test-only-secret DB_PATH=/tmp/ai-masystem-v2-test.db node test-v2.mjs",
+    "build:e2e": "npm --prefix web run build",
+    "test:e2e": "npm run build:e2e && playwright test",
     "mcp": "DB_PATH=/root/ai-masystem-v2/masystem.db HOME=/root node server/mcp-server.mjs"
   },
   "keywords": [],
@@ -21,5 +23,8 @@
     "jsonwebtoken": "^9.0.3",
     "react-router-dom": "^7.18.1",
     "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
   }
 }

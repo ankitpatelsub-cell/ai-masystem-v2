@@ -20,6 +20,11 @@ import UsersPage from './pages/UsersPage';
 import PermissionsPage from './pages/PermissionsPage';
 import Login from './pages/Login';
 import Landing from './pages/Landing';
+import PublicHospitalBooking from './pages/PublicHospitalBooking';
+import PublicHospitalCheckin from './pages/PublicHospitalCheckin';
+import PublicHospitalVisit from './pages/PublicHospitalVisit';
+import HospitalKiosk from './pages/HospitalKiosk';
+import HospitalBoard from './pages/HospitalBoard';
 
 const NAV = [
   { to: '/overview', ic: '🏠', lbl: 'Overview', end: true },
@@ -82,6 +87,11 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Landing />} />
           <Route path="/landing" element={<Landing />} />
+          <Route path="/hospital/book" element={<PublicHospitalBooking />} />
+          <Route path="/hospital/check-in" element={<PublicHospitalCheckin />} />
+          <Route path="/hospital/visit" element={<PublicHospitalVisit />} />
+          <Route path="/hospital/kiosk" element={<HospitalKiosk />} />
+          <Route path="/hospital/board" element={<HospitalBoard />} />
           <Route path="/*" element={
             <RequireAuth>
               <Routes>

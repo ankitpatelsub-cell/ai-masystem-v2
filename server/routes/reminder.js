@@ -22,6 +22,7 @@ router.post('/appointment', requirePerm('leads:manage'), (req, res) => {
 
 // Send a reminder for an appointment via the configured channel.
 async function sendReminder(appt) {
+  if (process.env.EMAIL_TRANSPORT === 'mock') return 'mock delivery accepted';
   const { execFileSync } = await import('child_process');
   const HIMALAYA = '/root/.local/bin/himalaya';
   const msg = `Hi ${appt.name}, this is a reminder for your ${appt.type} on ${new Date(appt.appt_at*1000).toLocaleString()}. Reply to confirm or reschedule. — AI MASystem`;
@@ -45,7 +46,7 @@ router.post('/:id/send', requirePerm('leads:manage'), async (req, res) => {
 
 // Send reminders for all upcoming, unsent appointments (cron-friendly).
 router.post('/run', requirePerm('leads:manage'), async (req, res) => {
-  const due = db.prepare('SELECT * FROM appointments WHERE reminder_sent=0 AND appt_at > strftime("%s","now") LIMIT 20').all();
+  const due = db.prepare("SELECT * FROM appointments WHERE reminder_sent=0 AND appt_at > strftime('%s','now') LIMIT 20").all();
   let n = 0;
   for (const a of due) {
     try { await sendReminder(a); db.prepare("UPDATE appointments SET reminder_sent=1, status='reminded' WHERE id=?").run(a.id); n++; }

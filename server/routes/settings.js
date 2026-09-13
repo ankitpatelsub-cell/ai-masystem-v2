@@ -14,6 +14,7 @@ router.get('/', (_, res) => {
 });
 router.post('/', (req, res) => {
   const { provider, openrouter_model } = req.body || {};
+  if (process.env.AGENT_TEST_MODE === '1') return res.json({ ok: true, provider: provider || 'claude' });
   const env = readEnv();
   if (provider) env.MODEL_PROVIDER = provider;
   if (openrouter_model !== undefined) env.OPENROUTER_MODEL = openrouter_model;

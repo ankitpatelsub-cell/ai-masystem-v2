@@ -2,6 +2,7 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 dotenv.config({ path: path.join(process.cwd(), '..', '.env') });
 import db from './db.js';
@@ -64,11 +65,15 @@ app.get('/api/activity', requireAuth(['admin','staff','viewer']), (_,res)=>{
 });
 
 // Serve React build (web/dist)
-const DIST = path.join(process.cwd(), '..', 'web', 'dist');
+const DIST = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../web/dist');
 if (fs.existsSync(DIST)) {
   app.use(express.static(DIST));
   app.get(/^(?!\/api).*/, (req, res) => { res.sendFile(path.join(DIST, 'index.html')); });
 }
 
 const PORT = process.env.PORT || 8099;
-app.listen(PORT, '0.0.0.0', ()=>console.log('AI MASystem v2 on '+PORT));
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  app.listen(PORT, '0.0.0.0', ()=>console.log('AI MASystem v2 on '+PORT));
+}
+
+export default app;

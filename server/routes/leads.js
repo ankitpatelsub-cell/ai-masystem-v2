@@ -5,8 +5,9 @@ import { requirePerm, logActivity } from '../auth.js';
 const router = express.Router();
 router.post('/', (req,res)=>{ const b=req.body||{};
   if(!b.name || !b.email) return res.status(400).json({error:'name + email required'});
+  const source = b.source === 'hospital_demo' ? 'hospital_demo' : 'web';
   db.prepare('INSERT INTO leads (name,company,email,phone,interest,message,source,status) VALUES (?,?,?,?,?,?,?,?)')
-    .run(b.name,b.company||'',b.email,b.phone||'',b.interest||'',b.message||'','web','new');
+    .run(b.name,b.company||'',b.email,b.phone||'',b.interest||'',b.message||'',source,'new');
   logActivity('leads','📥','New lead',`${b.name} / ${b.interest||''}`);
   res.json({ok:true});
 });
@@ -58,11 +59,14 @@ router.post('/:id/send', requirePerm('leads:manage'), async (req,res)=>{
     );
     const subject = `AI agent demo for ${lead.name} — 5 min?`;
     // call the MCP send tool directly (reuse the server's himalaya path)
-    const { execFileSync } = await import('child_process');
-    const HIMALAYA = '/root/.local/bin/himalaya';
-    const date = new Date().toUTCString().replace('GMT','+0000');
-    const raw = `To: ${lead.email}\r\nFrom: admin.ai.masystem@gmail.com\r\nSubject: ${subject}\r\nDate: ${date}\r\n\r\n${draft}\r\n`;
-    const out = execFileSync(HIMALAYA, ['message','send'], { input: raw, encoding: 'utf8' });
+    let out = 'mock delivery accepted';
+    if (process.env.EMAIL_TRANSPORT !== 'mock') {
+      const { execFileSync } = await import('child_process');
+      const HIMALAYA = '/root/.local/bin/himalaya';
+      const date = new Date().toUTCString().replace('GMT','+0000');
+      const raw = `To: ${lead.email}\r\nFrom: admin.ai.masystem@gmail.com\r\nSubject: ${subject}\r\nDate: ${date}\r\n\r\n${draft}\r\n`;
+      out = execFileSync(HIMALAYA, ['message','send'], { input: raw, encoding: 'utf8' });
+    }
     db.prepare("UPDATE leads SET status='contacted', last_contact_at=strftime('%s','now') WHERE id=?").run(req.params.id);
     result = 'sent: ' + (out.trim()||'ok');
   } catch(e){ result = 'send failed: ' + e.message.split('\n')[0]; }
@@ -70,6 +74,11 @@ router.post('/:id/send', requirePerm('leads:manage'), async (req,res)=>{
 });
 // Real data source: scrape live businesses via the maps skill -> insert as leads.
 router.post('/ingest-maps', requirePerm('leads:manage'), async (req,res)=>{
+  if (process.env.AGENT_TEST_MODE === '1') {
+    db.prepare('INSERT INTO leads (name,email,interest,source,status) VALUES (?,?,?,?,?)')
+      .run('Test Maps Lead', 'maps-test@example.com', 'test', 'maps', 'new');
+    return res.json({ ok: true, exit: 0, log: 'test maps lead added' });
+  }
   const { spawn } = await import('child_process');
   const py = spawn('python3', ['/root/ai-masystem-v2/ingest_maps.py'], { cwd: '/root/ai-masystem-v2', env: { ...process.env, DB_PATH: process.env.DB_PATH || '/root/ai-masystem-v2/masystem.db' } });
   let out = ''; py.stdout.on('data', d => out += d); py.stderr.on('data', d => out += d);

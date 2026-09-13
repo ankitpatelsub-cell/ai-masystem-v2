@@ -1,0 +1,221 @@
+import { expect, test } from '@playwright/test';
+
+async function login(page) {
+  await page.goto('/login');
+  await page.getByPlaceholder('username').fill('admin');
+  await page.getByPlaceholder('password').fill('ShreeAuto@2026');
+  await page.getByRole('button', { name: /sign in|login/i }).click();
+  await expect(page.getByRole('heading', { name: /command center/i })).toBeVisible();
+}
+
+async function openWorkspace(page, label) {
+  const link = page.locator('.nav a', { hasText: label });
+  await link.scrollIntoViewIfNeeded();
+  await link.click();
+}
+
+test('visitor can try the hospital demo and request a tailored walkthrough', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: /Try hospital demo/i }).click();
+  await page.getByRole('button', { name: /Run hospital demo/i }).click();
+  await expect(page.getByText(/demo token/i)).toBeVisible();
+  await page.screenshot({ path: 'artifacts/playwright/hospital-demo.png', fullPage: true });
+  await page.getByLabel('Your name').fill('Dr. Priya Shah');
+  await page.getByLabel('Work email').fill('priya@example.com');
+  await page.getByLabel('Hospital or clinic').fill('Sunrise Clinic');
+  await page.getByRole('button', { name: /Request hospital demo/i }).click();
+  await expect(page.getByText(/Thanks — our team will contact you/i)).toBeVisible();
+});
+
+test('visitor can book and check in for a hospital appointment', async ({ page }) => {
+  await page.goto('/hospital/book');
+  await expect(page.getByLabel('Doctor')).toBeVisible();
+  await expect(page.locator('button.chip:not([disabled])').first()).toBeVisible();
+  await page.locator('button.chip:not([disabled])').first().click();
+  await page.getByLabel('Patient name').fill('Playwright Patient');
+  await page.getByLabel('Patient phone').fill('9999999999');
+  await page.getByLabel('Reason for visit').fill('Routine consultation');
+  await page.getByRole('button', { name: /Confirm appointment/i }).click();
+  await expect(page.getByText(/Appointment confirmed/i)).toBeVisible();
+  await page.screenshot({ path: 'artifacts/playwright/hospital-booking-confirmed.png', fullPage: true });
+  await page.getByRole('link', { name: /Open check-in pass/i }).click();
+  await expect(page.getByAltText('Check-in QR code')).toBeVisible();
+  await page.screenshot({ path: 'artifacts/playwright/hospital-checkin-qr.png', fullPage: true });
+  await page.getByRole('button', { name: /Check in now/i }).click();
+  await expect(page.getByText(/Queue number/i)).toBeVisible();
+});
+
+test('patient self-service, kiosk check-in, and privacy-safe waiting board work', async ({ page }) => {
+  await page.goto('/hospital/book');
+  await page.locator('button.chip:not([disabled])').first().click();
+  await page.getByLabel('Patient name').fill('Self Service Browser');
+  await page.getByLabel('Patient phone').fill('8888888888');
+  await page.getByRole('button', { name: /Confirm appointment/i }).click();
+  await page.getByRole('link', { name: /Manage visit/i }).click();
+  await expect(page.getByRole('heading', { name: /Manage your visit/i })).toBeVisible();
+  await expect(page.getByText('Self Service Browser')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Your appointment' })).toBeVisible();
+
+  await page.goto('/hospital/kiosk');
+  await page.getByLabel('Kiosk patient name').fill('Kiosk Browser');
+  await page.getByLabel('Kiosk phone').fill('7777777777');
+  await page.getByLabel('Kiosk reason').fill('Walk-in consultation');
+  await page.getByRole('button', { name: /Get queue number/i }).click();
+  await expect(page.getByText(/You are checked in/i)).toBeVisible();
+  await page.screenshot({ path: 'artifacts/playwright/hospital-kiosk-pass.png', fullPage: true });
+
+  await page.goto('/hospital/board');
+  await expect(page.getByRole('heading', { name: /Now serving/i })).toBeVisible();
+  await expect(page.getByText(/Patient names are never shown/i)).toBeVisible();
+  await page.screenshot({ path: 'artifacts/playwright/hospital-waiting-board.png', fullPage: true });
+});
+
+test('staff can call and complete a checked-in appointment', async ({ page }) => {
+  await login(page); await openWorkspace(page, 'Hospital');
+  await expect(page.getByRole('table').getByText('Playwright Patient')).toBeVisible();
+  await page.screenshot({ path: 'artifacts/playwright/hospital-staff-queue.png', fullPage: true });
+  await page.getByRole('button', { name: 'Call' }).first().click();
+  await expect(page.getByText(/Patient called/i)).toBeVisible();
+  await page.getByRole('button', { name: 'Complete' }).first().click();
+  await expect(page.getByText(/Consultation completed/i)).toBeVisible();
+});
+
+test('admin can navigate every workspace and capture the dashboard', async ({ page }) => {
+  await login(page);
+  await expect(page.getByText(/agents online/i)).toBeVisible();
+  await page.screenshot({ path: 'artifacts/playwright/dashboard.png', fullPage: true });
+
+  const workspaces = [
+    ['Car Sales', /Car Sales Agent/], ['Hospital', /Hospital Booking & Queue/], ['Hotel', /Hotel Booking Agent/],
+    ['Manager', /Manager \(Call Agent\)/], ['Back-Office', /Back-Office AI/], ['Reels', /Reels Studio/],
+    ['Leads', /^📥 Leads$/], ['SDR Outreach', /SDR Outreach/], ['Reminders', /Reminders/],
+    ['Reviews', /Reviews/], ['Translate', /Translate/], ['Billing', /Billing/], ['Analytics', /Analytics/],
+    ['Users', /Users/], ['Roles', /Roles & Permissions/], ['Settings', /Settings/],
+  ];
+  for (const [label, heading] of workspaces) {
+    await openWorkspace(page, label);
+    await expect(page.getByRole('heading', { name: heading })).toBeVisible();
+  }
+});
+
+test('all dashboard actions complete safely in test mode', async ({ page }) => {
+  test.setTimeout(90_000);
+  await login(page);
+
+  await openWorkspace(page, 'Back-Office');
+  await page.getByRole('button', { name: 'Run' }).click();
+  await expect(page.locator('.bubble')).toContainText(/Test agent response/i);
+
+  await openWorkspace(page, 'Leads');
+  await page.getByRole('button', { name: /Sync real leads/i }).click();
+  await expect(page.getByText(/Maps sync done/i)).toBeVisible();
+  await page.getByRole('button', { name: /Score & prioritize/i }).click();
+  await expect(page.getByText(/Scoring done/i)).toBeVisible();
+  await page.getByRole('button', { name: '✍️ Personal' }).first().click();
+  await expect(page.getByText(/personalized draft/i)).toBeVisible();
+  await page.getByRole('button', { name: '🧠 Summarize' }).first().click();
+  await expect(page.getByText(/summary:/i)).toBeVisible();
+  await page.getByRole('button', { name: '✉️ Send' }).first().click();
+  await expect(page.getByText(/sent:/i)).toBeVisible();
+  await page.getByRole('button', { name: /Sync real leads/i }).click();
+  await expect(page.getByText(/Maps sync done/i)).toBeVisible();
+  await page.getByRole('button', { name: /Score & prioritize/i }).click();
+  await expect(page.getByText(/Scoring done/i)).toBeVisible();
+
+  await openWorkspace(page, 'SDR Outreach');
+  await page.getByRole('button', { name: /Draft top 3/i }).click();
+  await expect(page.getByText(/Drafted \d+ emails/i)).toBeVisible();
+  await page.getByRole('button', { name: '✉️ Send' }).first().click();
+  await expect(page.getByText(/sent:/i)).toBeVisible();
+
+  await openWorkspace(page, 'Reminders');
+  page.once('dialog', dialog => dialog.accept('Demo Patient'));
+  await page.getByRole('button', { name: /Add appointment/i }).click();
+  await expect(page.getByText('Demo Patient')).toBeVisible();
+  await page.locator('tbody').getByRole('button', { name: 'Send' }).click();
+  await expect(page.getByText(/mock delivery accepted/i)).toBeVisible();
+  await page.getByRole('button', { name: /Send due reminders/i }).click();
+  await expect(page.getByText(/Sent \d+ reminders/i)).toBeVisible();
+
+  await openWorkspace(page, 'Reviews');
+  page.once('dialog', dialog => dialog.accept('Demo Hospital'));
+  await page.getByRole('button', { name: /Add review/i }).click();
+  await expect(page.getByText('Demo Hospital')).toBeVisible();
+  await page.getByRole('button', { name: /Respond/i }).click();
+  await expect(page.getByText(/Test agent response/i).first()).toBeVisible();
+  await page.getByRole('button', { name: /Draft all pending/i }).click();
+  await expect(page.getByText(/Drafted \d+\./i)).toBeVisible();
+
+  await openWorkspace(page, 'Translate');
+  await page.getByRole('button', { name: /Translate/i }).click();
+  await expect(page.getByText(/Test agent response/i)).toBeVisible();
+  await page.getByRole('button', { name: /Detect language/i }).click();
+  await expect(page.getByText(/detected:/i)).toBeVisible();
+
+  await openWorkspace(page, 'Billing');
+  let billingPrompt = 0;
+  const fillBillingPrompt = dialog => dialog.accept(billingPrompt++ === 0 ? 'Demo Hospital' : '15000');
+  page.on('dialog', fillBillingPrompt);
+  await page.getByRole('button', { name: /New invoice/i }).click();
+  page.off('dialog', fillBillingPrompt);
+  await expect(page.getByText('Demo Hospital')).toBeVisible();
+  await page.getByRole('button', { name: 'Remind' }).click();
+  await expect(page.getByText(/mock delivery accepted/i)).toBeVisible();
+
+  await openWorkspace(page, 'Users');
+  await page.getByPlaceholder('username').fill('playwright-user');
+  await page.getByPlaceholder('password').fill('Playwright@123');
+  await page.getByRole('button', { name: 'Create' }).click();
+  const userRow = page.locator('tr', { hasText: 'playwright-user' });
+  await expect(userRow).toBeVisible();
+  await userRow.locator('select').selectOption('viewer');
+  await userRow.getByRole('button', { name: 'Remove' }).click();
+  await expect(userRow).toHaveCount(0);
+
+  await openWorkspace(page, 'Roles');
+  const viewerPermission = page.locator('tr', { hasText: 'backoffice:run' }).locator('input[type="checkbox"]').nth(2);
+  const before = await viewerPermission.isChecked();
+  await viewerPermission.click();
+  await expect(viewerPermission).toHaveJSProperty('checked', !before);
+  await viewerPermission.click();
+  await expect(viewerPermission).toHaveJSProperty('checked', before);
+
+  await openWorkspace(page, 'Settings');
+  await page.getByRole('button', { name: /Codex/i }).click();
+  await page.getByRole('button', { name: 'Save' }).click();
+  await expect(page.getByText(/Signed in as/i)).toBeVisible();
+
+  await openWorkspace(page, 'Analytics');
+  await expect(page.getByText('Total leads')).toBeVisible();
+});
+
+test('core agent and lead workflows complete in test mode', async ({ page }) => {
+  await login(page);
+
+  for (const [nav, message] of [
+    ['Car Sales', 'on-road price of Creta 12 lakh'],
+    ['Hospital', 'My name is Test Patient, fever since morning'],
+    ['Hotel', 'I want a deluxe room for 2 nights'],
+    ['Manager', 'patient wants appointment'],
+  ]) {
+    await page.locator('.nav a', { hasText: nav }).click();
+    await page.locator('textarea').fill(message);
+    await page.getByRole('button', { name: 'Send' }).click();
+    await expect(page.locator('.thread .msg')).toHaveCount(2);
+  }
+
+  await page.locator('.nav a', { hasText: 'Reels' }).click();
+  await page.getByRole('button', { name: 'Generate' }).click();
+  await expect(page.locator('.bubble')).toContainText(/Mode:/);
+
+  await page.locator('.nav a', { hasText: 'Leads' }).click();
+  await page.getByRole('button', { name: /Sync real leads/i }).click();
+  await expect(page.getByText(/Maps sync done/i)).toBeVisible();
+  await expect(page.getByRole('button', { name: '✍️ Personal' }).first()).toBeVisible();
+  await page.getByRole('button', { name: '✍️ Personal' }).first().click();
+  await expect(page.getByText(/personalized draft/i)).toBeVisible();
+
+  await page.locator('.nav a', { hasText: 'Translate' }).click();
+  await page.getByRole('button', { name: /Detect language/i }).click();
+  await expect(page.getByText(/detected:/i)).toBeVisible();
+});

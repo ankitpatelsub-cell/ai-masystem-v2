@@ -1,5 +1,7 @@
 // src/pages/Landing.tsx — Public marketing page (no auth required).
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../lib/api';
 
 const FEATURES = [
   { ic: '🏥', t: 'Hospital Reception AI', d: 'Auto patient intake, queue & surge alerts in EN/JA/HI.' },
@@ -20,6 +22,32 @@ const STEPS = [
 
 export default function Landing() {
   const nav = useNavigate();
+  const [demoText, setDemoText] = useState('My name is Anita, I have a fever since this morning');
+  const [demoSteps, setDemoSteps] = useState<any[]>([]);
+  const [demoError, setDemoError] = useState('');
+  const [demoBusy, setDemoBusy] = useState(false);
+  const [interest, setInterest] = useState({ name: '', email: '', company: '', phone: '' });
+  const [interestNote, setInterestNote] = useState('');
+  const [interestBusy, setInterestBusy] = useState(false);
+
+  async function runHospitalDemo() {
+    setDemoBusy(true); setDemoError('');
+    try { const result: any = await api('POST', '/api/hospital/demo', { text: demoText }); setDemoSteps(result.steps || []); }
+    catch (error: any) { setDemoError(error.message); setDemoSteps([]); }
+    finally { setDemoBusy(false); }
+  }
+
+  async function submitInterest(event: React.FormEvent) {
+    event.preventDefault(); setInterestBusy(true); setInterestNote('');
+    try {
+      await api('POST', '/api/leads', { ...interest, interest: 'hospital', source: 'hospital_demo', message: 'Hospital demo interest from public landing page.' });
+      setInterestNote('Thanks — our team will contact you about a hospital demo.');
+      setInterest({ name: '', email: '', company: '', phone: '' });
+    } catch (error: any) { setInterestNote(error.message); }
+    finally { setInterestBusy(false); }
+  }
+
+  const changeInterest = (field: keyof typeof interest) => (event: React.ChangeEvent<HTMLInputElement>) => setInterest(current => ({ ...current, [field]: event.target.value }));
   return (
     <div style={{ minHeight: '100vh' }}>
       <header style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', padding: '20px 6vw', maxWidth: 1200, margin: '0 auto' }}>
@@ -35,8 +63,34 @@ export default function Landing() {
           MASystem is a multi-agent platform that handles patient intake, hotel concierge, outreach and reviews — automating the busywork so your team talks to people, not phones.
         </p>
         <div className="row" style={{ justifyContent: 'center' }}>
-          <a className="btn" href="mailto:admin.ai.masystem@gmail.com?subject=AI%20agent%20demo%20request" onClick={(e) => { e.preventDefault(); window.location.href = 'mailto:admin.ai.masystem@gmail.com?subject=AI%20agent%20demo%20request'; }}>📩 Request a demo</a>
+          <a className="btn" href="#hospital-demo">🏥 Try hospital demo</a>
+          <button className="btn ghost" style={{ background: 'var(--card2)', border: '1px solid var(--line)' }} onClick={() => nav('/hospital/book')}>Book a hospital visit →</button>
           <button className="btn ghost" style={{ background: 'var(--card2)', border: '1px solid var(--line)' }} onClick={() => nav('/login')}>Login to dashboard →</button>
+        </div>
+      </section>
+
+      <section id="hospital-demo" style={{ maxWidth: 1000, margin: '16px auto 40px', padding: '20px 6vw' }}>
+        <div className="card" style={{ margin: 0, border: '1px solid var(--brand)' }}>
+          <div className="badge ok">🏥 Interactive hospital reception demo</div>
+          <h2 style={{ fontSize: 26, fontWeight: 900, margin: '14px 0 8px' }}>See a patient check-in in seconds</h2>
+          <p className="muted" style={{ maxWidth: 680, lineHeight: 1.6 }}>Try a sample patient request. This is a sandbox: it does not add anyone to a live hospital queue or retain patient information.</p>
+          <textarea aria-label="Patient request for hospital demo" rows={3} value={demoText} onChange={event => setDemoText(event.target.value)} style={{ marginTop: 12 }} />
+          <div className="row" style={{ marginTop: 10 }}><button className="btn" onClick={runHospitalDemo} disabled={demoBusy}>{demoBusy ? 'Running demo…' : 'Run hospital demo'}</button></div>
+          {demoError && <p style={{ color: 'var(--red)', marginTop: 10 }}>{demoError}</p>}
+          {demoSteps.length > 0 && <div className="steps" style={{ marginTop: 14 }}>{demoSteps.map((step, index) => <div className="step" key={index}><span className="t">{step.tool}</span><span>{step.result}</span></div>)}</div>}
+
+          <form onSubmit={submitInterest} style={{ marginTop: 22, paddingTop: 18, borderTop: '1px solid var(--line)' }}>
+            <h3 style={{ marginBottom: 5 }}>Interested in this for your hospital?</h3>
+            <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>Leave your details and we’ll arrange a tailored walkthrough.</p>
+            <div className="row">
+              <input aria-label="Your name" required placeholder="Your name" value={interest.name} onChange={changeInterest('name')} />
+              <input aria-label="Work email" required type="email" placeholder="Work email" value={interest.email} onChange={changeInterest('email')} />
+              <input aria-label="Hospital or clinic" placeholder="Hospital or clinic" value={interest.company} onChange={changeInterest('company')} />
+              <input aria-label="Phone number" placeholder="Phone number (optional)" value={interest.phone} onChange={changeInterest('phone')} />
+              <button className="btn" disabled={interestBusy}>{interestBusy ? 'Sending…' : 'Request hospital demo'}</button>
+            </div>
+            {interestNote && <p className="muted" style={{ color: interestNote.startsWith('Thanks') ? 'var(--ok)' : 'var(--red)', marginTop: 10 }}>{interestNote}</p>}
+          </form>
         </div>
       </section>
 
