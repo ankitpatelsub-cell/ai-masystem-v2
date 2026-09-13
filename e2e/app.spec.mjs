@@ -80,6 +80,32 @@ test('staff can call and complete a checked-in appointment', async ({ page }) =>
   await expect(page.getByText(/Consultation completed/i)).toBeVisible();
 });
 
+test('staff can configure a hospital-specific department, doctor, room, policy, and closure', async ({ page }) => {
+  await login(page); await page.goto('/hospital/config');
+  await expect(page.getByRole('heading', { name: /Hospital configuration/i })).toBeVisible();
+  await page.getByLabel('Department name').fill('Diagnostics');
+  await page.getByLabel('Department location').fill('East Campus');
+  await page.getByRole('button', { name: 'Add department' }).click();
+  await expect(page.getByLabel('Configured department').locator('option', { hasText: 'Diagnostics' })).toHaveCount(1);
+  await page.getByLabel('Configured doctor name').fill('Dr. Configured');
+  await page.getByLabel('Configured specialty').fill('Diagnostics');
+  await page.getByLabel('Configured department').selectOption({ label: 'Diagnostics' });
+  await page.getByLabel('Configured room').fill('Room D-12');
+  await page.getByRole('button', { name: 'Add doctor' }).click();
+  await expect(page.locator('.feed-item b', { hasText: 'Dr. Configured' })).toBeVisible();
+  await page.getByLabel('Policy doctor').selectOption({ label: 'Dr. Configured · Room D-12' });
+  await page.getByLabel('Policy start time').fill('10:00');
+  await page.getByLabel('Policy end time').fill('12:00');
+  await page.getByLabel('Policy duration').fill('30');
+  await page.getByRole('button', { name: 'Add policy' }).click();
+  await expect(page.getByText(/10:00–12:00/)).toBeVisible();
+  await page.getByLabel('Holiday date').fill('2027-01-01');
+  await page.getByLabel('Holiday name').fill('New Year closure');
+  await page.getByRole('button', { name: 'Add closure' }).click();
+  await expect(page.getByText('New Year closure')).toBeVisible();
+  await page.screenshot({ path: 'artifacts/playwright/hospital-configuration.png', fullPage: true });
+});
+
 test('admin can navigate every workspace and capture the dashboard', async ({ page }) => {
   await login(page);
   await expect(page.getByText(/agents online/i)).toBeVisible();

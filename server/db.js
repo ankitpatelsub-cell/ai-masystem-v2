@@ -153,12 +153,29 @@ CREATE TABLE IF NOT EXISTS hospital_public_tokens (
   expires_at INTEGER NOT NULL, verified_at INTEGER, created_at INTEGER NOT NULL,
   FOREIGN KEY(appointment_id) REFERENCES hospital_appointments(id)
 );
+CREATE TABLE IF NOT EXISTS hospital_departments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE, location TEXT NOT NULL DEFAULT 'Main campus',
+  active INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS hospital_holidays (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  holiday_date TEXT NOT NULL UNIQUE, name TEXT NOT NULL, created_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS hospital_slot_policies (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  doctor_id INTEGER NOT NULL, weekday INTEGER NOT NULL,
+  start_time TEXT NOT NULL, end_time TEXT NOT NULL, duration_min INTEGER NOT NULL,
+  capacity INTEGER NOT NULL DEFAULT 1, service_type TEXT NOT NULL DEFAULT 'Consultation',
+  active INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL,
+  FOREIGN KEY(doctor_id) REFERENCES hospital_doctors(id)
+);
 `);
 
 // Additive migrations keep existing hospital databases compatible with the
 // scheduling and queue upgrades without requiring a destructive migration.
 const hospitalDoctorColumns = new Set(db.prepare('PRAGMA table_info(hospital_doctors)').all().map(column => column.name));
-for (const [name, type] of Object.entries({ department: "TEXT NOT NULL DEFAULT 'General OPD'", room: "TEXT NOT NULL DEFAULT 'Reception'" })) {
+for (const [name, type] of Object.entries({ department: "TEXT NOT NULL DEFAULT 'General OPD'", department_id: 'INTEGER', room: "TEXT NOT NULL DEFAULT 'Reception'" })) {
   if (!hospitalDoctorColumns.has(name)) db.exec(`ALTER TABLE hospital_doctors ADD COLUMN ${name} ${type}`);
 }
 const hospitalSlotColumns = new Set(db.prepare('PRAGMA table_info(hospital_slots)').all().map(column => column.name));

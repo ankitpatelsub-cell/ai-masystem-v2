@@ -76,6 +76,13 @@ router.post('/refresh', (req, res) => {
   res.json({ token: signAccess(u) });
 });
 
+// Restore an authenticated browser session after a page refresh or deep link.
+router.get('/me', requireAuth(), (req, res) => {
+  const user = db.prepare('SELECT id,username,name,email,role FROM users WHERE id=?').get(req.user.uid);
+  if (!user) return res.status(401).json({ error: 'user not found' });
+  res.json({ user });
+});
+
 // middleware
 export function requireAuth(roles) {
   return (req, res, next) => {

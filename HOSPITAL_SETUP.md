@@ -10,6 +10,17 @@ The public patient flow is available at:
 
 Staff use `/hospital` after sign-in for appointments, live queue controls, transfers, priority audit, scheduling blocks, metrics, and delivery history.
 
+## Configure each hospital
+
+Open `/hospital/config` after sign-in and configure in this order:
+
+1. Departments and campus/location.
+2. Doctors, their department, consultation room, and default duration.
+3. Weekly slot policies for each doctor: weekday, start/end time, slot duration, capacity, and service type.
+4. Holiday and closure dates.
+
+Production does not create a generic doctor roster or 9–5 calendar. A doctor is not publicly bookable until the hospital adds the doctor and at least one matching weekly slot policy. `HOSPITAL_DEMO_SEED=1` is reserved for automated tests and sandbox demonstrations.
+
 ## Notification provider
 
 Notification events are durable before delivery. Set these server environment variables to deliver them through your approved SMS, WhatsApp, email, or integration service:

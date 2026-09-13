@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import ChatPanel from '../components/ChatPanel';
 import { api } from '../lib/api';
+import { Link } from 'react-router-dom';
 
 const day = () => new Date().toISOString().slice(0, 10);
 
@@ -16,7 +17,7 @@ export default function HospitalPage() {
   async function showHistory(id: number) { try { setHistory(await api('GET', `/api/hospital/appointments/${id}/history`)); } catch (e: any) { setNote(e.message); } }
   async function blockTime() { const start = window.prompt('Block start time (HH:MM)', '12:00'), end = window.prompt('Block end time (HH:MM)', '13:00'); if (!start || !end) return; const startsAt = new Date(`${date}T${start}:00`).getTime(), endsAt = new Date(`${date}T${end}:00`).getTime(); try { await api('POST', '/api/hospital/schedule-blocks', { doctorId: Number(doctorId), startsAt, endsAt, reason: 'Staff schedule block' }); setNote('Time blocked; new bookings cannot select it.'); } catch (e: any) { setNote(e.message); } }
   return <>
-    <div className="top"><div><h1>🏥 Hospital Booking & Queue</h1><div className="sub">Appointments · arrival check-in · live queue · staff controls</div></div></div>
+    <div className="top"><div><h1>🏥 Hospital Booking & Queue</h1><div className="sub">Appointments · arrival check-in · live queue · staff controls</div></div><Link className="chip" to="/hospital/config">Configure hospital</Link></div>
     {note && <div className="card" style={{ color: 'var(--brand)' }}>{note}</div>}
     <div className="card"><div className="row"><label>Doctor<select aria-label="Queue doctor" value={doctorId} onChange={e => setDoctorId(e.target.value)}>{doctors.map(d => <option key={d.id} value={d.id}>{d.name} — {d.specialty}</option>)}</select></label><label>Date<input aria-label="Queue date" type="date" value={date} onChange={e => setDate(e.target.value)} /></label><button className="btn" onClick={load}>Refresh</button><button className="chip" onClick={blockTime}>Block time</button><a className="chip" href="/hospital/kiosk" target="_blank">Open kiosk</a><a className="chip" href={`/hospital/board?doctorId=${doctorId}`} target="_blank">Waiting board</a></div>
       <div className="cards" style={{ marginTop: 16 }}>{[['Confirmed',metrics.booked],['Checked in',metrics.checkedIn],['In queue',queue.length],['Completed',metrics.completed],['Waitlisted',metrics.waitlisted],['Avg. wait',`${metrics.averageWaitMin || 0} min`],['Avg. service',`${metrics.averageServiceMin || 0} min`],['No-show',`${metrics.noShowRate || 0}%`]].map(([label,value]) => <div className="stat" key={String(label)}><b>{value ?? 0}</b><span>{label}</span></div>)}</div>

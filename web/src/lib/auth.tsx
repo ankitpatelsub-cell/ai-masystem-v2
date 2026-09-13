@@ -17,7 +17,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { setLoading(false); }, []);
+  useEffect(() => {
+    if (!localStorage.getItem('mas_token') && !localStorage.getItem('mas_refresh')) { setLoading(false); return; }
+    api<{ user: RawUser }>('GET', '/api/auth/me').then(result => setUser(toUser(result.user))).catch(() => clearAuth()).finally(() => setLoading(false));
+  }, []);
 
   const login = async (username: string, password: string) => {
     const d = await api('POST', '/api/auth/login', { username, password });

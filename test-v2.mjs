@@ -31,6 +31,10 @@ await T('admin login (strong pw)', async () => {
   const { status, data } = await j('POST', '/api/auth/login', { body: { username: 'admin', password: process.env.ADMIN_PW || 'MASys@9205a6c968d7' } });
   assert.strictEqual(status, 200); assert.ok(data.token); adminTok = data.token;
 });
+await T('session survives a browser refresh via /api/auth/me', async () => {
+  const { status, data } = await j('GET', '/api/auth/me', { token: adminTok });
+  assert.strictEqual(status, 200); assert.strictEqual(data.user.role, 'admin');
+});
 await T('wrong password rejected', async () => {
   const { status } = await j('POST', '/api/auth/login', { body: { username: 'admin', password: 'nope' } });
   assert.strictEqual(status, 401);
@@ -123,6 +127,23 @@ await T('hospital self-service, kiosk, schedule, transfer, display, and notifica
   assert.strictEqual(deleted.status, 200);
   const notifications = await j('GET', `/api/hospital/notifications?appointmentId=${booked.data.appointment.id}`, { token: adminTok });
   assert.strictEqual(notifications.status, 200); assert.ok(notifications.data.length);
+});
+await T('hospital can use its own departments, rooms, holiday closures, and slot policies', async () => {
+  const department = await j('POST', '/api/hospital/departments', { body: { name: 'Imaging Test', location: 'North Campus' }, token: adminTok });
+  assert.strictEqual(department.status, 201);
+  const doctor = await j('POST', '/api/hospital/doctors', { body: { name: 'Dr. Custom Schedule', specialty: 'Radiology', departmentId: department.data.department.id, room: 'Imaging Room 7', duration: 30 }, token: adminTok });
+  assert.strictEqual(doctor.status, 201); assert.strictEqual(doctor.data.doctor.room, 'Imaging Room 7');
+  const slotDate = new Date(Date.now() + 2 * 86_400_000).toISOString().slice(0, 10), weekday = new Date(`${slotDate}T00:00:00.000Z`).getUTCDay();
+  const policy = await j('POST', '/api/hospital/slot-policies', { body: { doctorId: doctor.data.doctor.id, weekday, startTime: '10:00', endTime: '12:00', durationMin: 30, capacity: 2, serviceType: 'MRI scan' }, token: adminTok });
+  assert.strictEqual(policy.status, 201);
+  const slots = await j('GET', `/api/hospital/public/slots?doctorId=${doctor.data.doctor.id}&date=${slotDate}`);
+  assert.strictEqual(slots.status, 200); assert.strictEqual(slots.data.length, 4); assert.ok(slots.data.every(slot => slot.capacity === 2 && slot.service_type === 'MRI scan'));
+  const holiday = await j('POST', '/api/hospital/holidays', { body: { date: slotDate, name: 'Test hospital closure' }, token: adminTok });
+  assert.strictEqual(holiday.status, 201);
+  const closed = await j('GET', `/api/hospital/public/slots?doctorId=${doctor.data.doctor.id}&date=${slotDate}`);
+  assert.strictEqual(closed.status, 200); assert.strictEqual(closed.data.length, 0);
+  assert.strictEqual((await j('DELETE', `/api/hospital/holidays/${holiday.data.holiday.id}`, { token: adminTok })).status, 200);
+  assert.strictEqual((await j('DELETE', `/api/hospital/slot-policies/${policy.data.policy.id}`, { token: adminTok })).status, 200);
 });
 await T('hotel intake', async () => {
   const { status } = await j('POST', '/api/hotel/intake', { body: { text: 'room tonight', locale: 'en' }, token: adminTok });
