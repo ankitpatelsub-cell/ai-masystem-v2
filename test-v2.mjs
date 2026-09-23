@@ -14,9 +14,9 @@ const ok = (n) => { pass++; console.log('  ✓', n); };
 const bad = (n, e) => { fail++; console.log('  ✗', n, '->', e.message || e); };
 async function T(n, fn) { try { await fn(); ok(n); } catch (e) { bad(n, e); } }
 
-const j = async (method, path, { body, token } = {}) => {
+const j = async (method, path, { body, token, patientToken } = {}) => {
   const r = await fetch(BASE + path, {
-    method, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
+    method, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}), ...(patientToken ? { 'x-patient-token': patientToken } : {}) },
     body: body ? JSON.stringify(body) : undefined,
   });
   const txt = await r.text();
@@ -104,12 +104,25 @@ await T('hospital self-service, kiosk, schedule, transfer, display, and notifica
   const booked = await j('POST', '/api/hospital/public/bookings', { body: { patientName: 'Self Service Test', phone: '8888888888', doctorId: secondDoctor.id, slotId: slots.data[0].id } });
   assert.strictEqual(booked.status, 201);
   const lookup = await j('GET', `/api/hospital/public/bookings/${booked.data.appointment.booking_code}`);
-  assert.strictEqual(lookup.status, 200); assert.strictEqual(lookup.data.appointment.patient_name, 'Self Service Test'); assert.strictEqual(lookup.data.appointment.abha_number, undefined);
+  assert.strictEqual(lookup.status, 200); assert.strictEqual(lookup.data.verificationRequired, true); assert.strictEqual(lookup.data.appointment.patient_name, undefined); assert.strictEqual(lookup.data.appointment.abha_number, undefined);
   const verification = await j('POST', `/api/hospital/public/bookings/${booked.data.appointment.booking_code}/send-verification`);
   assert.strictEqual(verification.status, 200);
   const otp = db.prepare("SELECT code FROM hospital_public_tokens WHERE appointment_id=? ORDER BY id DESC LIMIT 1").get(booked.data.appointment.id).code;
   const verified = await j('POST', `/api/hospital/public/bookings/${booked.data.appointment.booking_code}/verify`, { body: { code: otp } });
-  assert.strictEqual(verified.status, 200);
+  assert.strictEqual(verified.status, 200); assert.ok(verified.data.patientToken);
+  const deniedPortal = await j('GET', `/api/hospital/public/portal/${booked.data.appointment.booking_code}`);
+  assert.strictEqual(deniedPortal.status, 401);
+  const patientToken = verified.data.patientToken;
+  const portal = await j('GET', `/api/hospital/public/portal/${booked.data.appointment.booking_code}`, { patientToken });
+  assert.strictEqual(portal.status, 200); assert.strictEqual(portal.data.appointment.patient_name, 'Self Service Test');
+  const preferences = await j('PATCH', `/api/hospital/public/portal/${booked.data.appointment.booking_code}/preferences`, { patientToken, body: { preferredChannel: 'email', caregiverName: 'Care Partner', accessibilityNeeds: 'Wheelchair access' } });
+  assert.strictEqual(preferences.status, 200); assert.strictEqual(preferences.data.appointment.preferred_channel, 'email');
+  const previsit = await j('POST', `/api/hospital/public/portal/${booked.data.appointment.booking_code}/previsit`, { patientToken, body: { medications: 'None', allergies: 'Penicillin', notes: 'First visit' } });
+  assert.strictEqual(previsit.status, 200);
+  const document = await j('POST', `/api/hospital/public/portal/${booked.data.appointment.booking_code}/documents`, { patientToken, body: { name: 'referral.pdf', documentType: 'referral' } });
+  assert.strictEqual(document.status, 201); assert.strictEqual(document.data.document.status, 'received');
+  const payment = await j('POST', `/api/hospital/public/portal/${booked.data.appointment.booking_code}/payment-intent`, { patientToken });
+  assert.strictEqual(payment.status, 200); assert.strictEqual(payment.data.status, 'provider_required');
   const walkIn = await j('POST', '/api/hospital/public/walk-ins', { body: { patientName: 'Kiosk Test', phone: '7777777777', doctorId: secondDoctor.id, reason: 'Walk-in' } });
   assert.strictEqual(walkIn.status, 201); assert.strictEqual(walkIn.data.appointment.visit_type, 'walk_in');
   const display = await j('GET', `/api/hospital/public/display?doctorId=${secondDoctor.id}&date=${date}`);

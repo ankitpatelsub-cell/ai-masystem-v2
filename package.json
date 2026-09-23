@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "RESET_TEST_DB=1 AGENT_TEST_MODE=1 HOSPITAL_DEMO_SEED=1 EMAIL_TRANSPORT=mock ADMIN_PASS=ShreeAuto@2026 ADMIN_PW=ShreeAuto@2026 JWT_SECRET=test-only-secret DB_PATH=/tmp/ai-masystem-v2-test.db node test-v2.mjs",
+    "test": "RESET_TEST_DB=1 AGENT_TEST_MODE=1 HOSPITAL_DEMO_SEED=1 HOSPITAL_PUBLIC_RATE_LIMIT=200 EMAIL_TRANSPORT=mock ADMIN_PASS=ShreeAuto@2026 ADMIN_PW=ShreeAuto@2026 JWT_SECRET=test-only-secret DB_PATH=/tmp/ai-masystem-v2-test.db node test-v2.mjs",
     "build:e2e": "npm --prefix web run build && npm --prefix hospital-web run build",
     "test:e2e": "npm run build:e2e && playwright test",
     "mcp": "DB_PATH=/root/ai-masystem-v2/masystem.db HOME=/root node server/mcp-server.mjs"

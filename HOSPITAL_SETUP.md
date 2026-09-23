@@ -39,8 +39,10 @@ HOSPITAL_HMIS_WEBHOOK=https://hmis.example/fhir/appointments
 HOSPITAL_HMIS_TOKEN=hmis-secret
 HOSPITAL_ABDM_WEBHOOK=https://approved-abdm-gateway.example/appointments
 HOSPITAL_ABDM_TOKEN=abdm-issued-secret
+HOSPITAL_TELEHEALTH_BASE_URL=https://video.hospital.example/visit
+HOSPITAL_PAYMENT_WEBHOOK=https://payments.hospital.example/checkout
 ```
 
 The webhook receives the event channel, event kind, body, destination, and booking code. Configure it to route `sms` to your approved SMS/WhatsApp provider and `email` to your email provider. Use `HOSPITAL_NOTIFICATION_TRANSPORT=mock` for safe non-delivery environments.
 
-For production, place the public app behind HTTPS, replace the generic webhook with the hospital's approved messaging provider, configure OTP enforcement in the identity layer, and complete hospital-specific privacy, retention, consent, and incident-response reviews. HMIS and ABDM endpoints receive a FHIR R4 Appointment payload. ABDM/ABHA interoperability requires separate provider onboarding and credentials; the optional ABHA field alone is not a network integration.
+The standalone patient portal requires a one-time code and issues a hashed, appointment-scoped session that expires after 30 minutes. In production, place the public app behind HTTPS, connect the generic webhooks to hospital-approved messaging, video and payment providers, and complete hospital-specific privacy, retention, consent, accessibility and incident-response reviews. The demo document workflow records intake metadata; connect approved encrypted object storage and malware scanning before accepting real clinical files. HMIS and ABDM endpoints receive a FHIR R4 Appointment payload. ABDM/ABHA interoperability requires separate provider onboarding and credentials; the optional ABHA field alone is not a network integration.
