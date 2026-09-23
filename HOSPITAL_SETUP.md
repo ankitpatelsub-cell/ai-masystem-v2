@@ -10,6 +10,8 @@ The public patient flow is available at:
 
 Staff use `/hospital` after sign-in for appointments, live queue controls, transfers, priority audit, scheduling blocks, metrics, and delivery history.
 
+`/hospital/operations` provides nurse-reviewed triage, visit-stage handoffs (registration, vitals, consultation, laboratory, pharmacy, and billing), doctor-absence substitution/rebooking, and interoperability status. Triage is an operational aid only; hospitals must supply their approved emergency protocol and trained clinical staff remain responsible for disposition decisions.
+
 ## Configure each hospital
 
 Open `/hospital/config` after sign-in and configure in this order:
@@ -29,8 +31,12 @@ Notification events are durable before delivery. Set these server environment va
 HOSPITAL_NOTIFICATION_WEBHOOK=https://provider.example/hospital-events
 HOSPITAL_NOTIFICATION_TOKEN=provider-secret
 HOSPITAL_PUBLIC_RATE_LIMIT=20
+HOSPITAL_HMIS_WEBHOOK=https://hmis.example/fhir/appointments
+HOSPITAL_HMIS_TOKEN=hmis-secret
+HOSPITAL_ABDM_WEBHOOK=https://approved-abdm-gateway.example/appointments
+HOSPITAL_ABDM_TOKEN=abdm-issued-secret
 ```
 
 The webhook receives the event channel, event kind, body, destination, and booking code. Configure it to route `sms` to your approved SMS/WhatsApp provider and `email` to your email provider. Use `HOSPITAL_NOTIFICATION_TRANSPORT=mock` for safe non-delivery environments.
 
-For production, place the public app behind HTTPS, replace the generic webhook with the hospital's approved messaging provider, configure OTP enforcement in the identity layer, and complete hospital-specific privacy, retention, consent, and incident-response reviews. ABDM/ABHA interoperability requires separate provider onboarding and credentials; the optional ABHA field is not a network integration.
+For production, place the public app behind HTTPS, replace the generic webhook with the hospital's approved messaging provider, configure OTP enforcement in the identity layer, and complete hospital-specific privacy, retention, consent, and incident-response reviews. HMIS and ABDM endpoints receive a FHIR R4 Appointment payload. ABDM/ABHA interoperability requires separate provider onboarding and credentials; the optional ABHA field alone is not a network integration.

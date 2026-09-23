@@ -145,6 +145,34 @@ await T('hospital can use its own departments, rooms, holiday closures, and slot
   assert.strictEqual((await j('DELETE', `/api/hospital/holidays/${holiday.data.holiday.id}`, { token: adminTok })).status, 200);
   assert.strictEqual((await j('DELETE', `/api/hospital/slot-policies/${policy.data.policy.id}`, { token: adminTok })).status, 200);
 });
+await T('hospital triage, visit stages, absence rebooking, and interoperability readiness', async () => {
+  const primary = db.prepare("SELECT id FROM hospital_doctors WHERE name='Dr. Asha Mehta'").get(), substitute = db.prepare("SELECT id FROM hospital_doctors WHERE name='Dr. Rohan Shah'").get(), visitDate = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+  const slots = await j('GET', `/api/hospital/public/slots?doctorId=${primary.id}&date=${visitDate}`);
+  assert.strictEqual(slots.status, 200); const selected = slots.data.find(slot => slot.available > 0);
+  const booking = await j('POST', '/api/hospital/public/bookings', { body: { patientName: 'Care Journey Test', phone: '7666666666', doctorId: primary.id, slotId: selected.id } });
+  assert.strictEqual(booking.status, 201);
+  const unsafeTriage = await j('POST', `/api/hospital/appointments/${booking.data.appointment.id}/triage`, { body: { disposition: 'standard', redFlags: ['chest_pain'], notes: '' }, token: adminTok });
+  assert.strictEqual(unsafeTriage.status, 400);
+  const triage = await j('POST', `/api/hospital/appointments/${booking.data.appointment.id}/triage`, { body: { disposition: 'emergency_escalation', redFlags: ['chest_pain'], notes: 'Nurse directed immediate clinical review.' }, token: adminTok });
+  assert.strictEqual(triage.status, 201); assert.strictEqual(triage.data.assessment.disposition, 'emergency_escalation');
+  const stages = await j('GET', `/api/hospital/appointments/${booking.data.appointment.id}/visit-stages`, { token: adminTok });
+  assert.strictEqual(stages.status, 200); assert.strictEqual(stages.data.stages.length, 6);
+  const required = await j('POST', `/api/hospital/appointments/${booking.data.appointment.id}/visit-stages/lab`, { body: { action: 'require' }, token: adminTok });
+  assert.strictEqual(required.status, 200); assert.strictEqual(required.data.stages.find(s => s.stage === 'lab').status, 'waiting');
+  const started = await j('POST', `/api/hospital/appointments/${booking.data.appointment.id}/visit-stages/lab`, { body: { action: 'start' }, token: adminTok });
+  assert.strictEqual(started.status, 200); const completedStage = await j('POST', `/api/hospital/appointments/${booking.data.appointment.id}/visit-stages/lab`, { body: { action: 'complete' }, token: adminTok });
+  assert.strictEqual(completedStage.status, 200); assert.strictEqual(completedStage.data.stages.find(s => s.stage === 'lab').status, 'completed');
+  const absence = await j('POST', '/api/hospital/doctor-absences', { body: { doctorId: primary.id, substituteDoctorId: substitute.id, startsAt: selected.starts_at - 60_000, endsAt: selected.ends_at + 60_000, reason: 'Test emergency leave' }, token: adminTok });
+  assert.strictEqual(absence.status, 201); assert.strictEqual(absence.data.transferred, 1);
+  const changed = db.prepare('SELECT doctor_id,original_doctor_id FROM hospital_appointments WHERE id=?').get(booking.data.appointment.id);
+  assert.strictEqual(changed.doctor_id, substitute.id); assert.strictEqual(changed.original_doctor_id, primary.id);
+  const fhir = await j('GET', `/api/hospital/appointments/${booking.data.appointment.id}/fhir`, { token: adminTok });
+  assert.strictEqual(fhir.status, 200); assert.strictEqual(fhir.data.resourceType, 'Appointment');
+  const integration = await j('GET', '/api/hospital/integrations/status', { token: adminTok });
+  assert.strictEqual(integration.status, 200); assert.strictEqual(integration.data.fhirVersion, 'R4 Appointment');
+  const unconfigured = await j('POST', `/api/hospital/appointments/${booking.data.appointment.id}/sync`, { body: { target: 'hmis' }, token: adminTok });
+  assert.strictEqual(unconfigured.status, 409);
+});
 await T('hotel intake', async () => {
   const { status } = await j('POST', '/api/hotel/intake', { body: { text: 'room tonight', locale: 'en' }, token: adminTok });
   assert.strictEqual(status, 200);

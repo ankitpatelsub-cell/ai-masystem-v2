@@ -26,6 +26,7 @@ import PublicHospitalVisit from './pages/PublicHospitalVisit';
 import HospitalKiosk from './pages/HospitalKiosk';
 import HospitalBoard from './pages/HospitalBoard';
 import HospitalConfiguration from './pages/HospitalConfiguration';
+import HospitalOperations from './pages/HospitalOperations';
 
 const NAV = [
   { to: '/overview', ic: '🏠', lbl: 'Overview', end: true },
@@ -100,6 +101,7 @@ export default function App() {
                 <Route path="/car" element={<CarPage />} />
                 <Route path="/hospital" element={<HospitalPage />} />
                 <Route path="/hospital/config" element={<HospitalConfiguration />} />
+                <Route path="/hospital/operations" element={<HospitalOperations />} />
                 <Route path="/hotel" element={<HotelPage />} />
                 <Route path="/manager" element={<ManagerPage />} />
                 <Route path="/backoffice" element={<BackOfficePage />} />

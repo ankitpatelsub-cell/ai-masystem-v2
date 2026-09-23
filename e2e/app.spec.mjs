@@ -106,6 +106,43 @@ test('staff can configure a hospital-specific department, doctor, room, policy, 
   await page.screenshot({ path: 'artifacts/playwright/hospital-configuration.png', fullPage: true });
 });
 
+test('staff can triage, advance visit stages, record absence, and inspect integration readiness', async ({ page }) => {
+  const doctors = await (await page.request.get('/api/hospital/public/doctors')).json();
+  const date = new Date().toISOString().slice(0,10);
+  const slots = await (await page.request.get(`/api/hospital/public/slots?doctorId=${doctors[0].id}&date=${date}`)).json();
+  const bookingResponse = await page.request.post('/api/hospital/public/bookings', { data: { patientName: 'Care Ops Browser', phone: '7555555555', doctorId: doctors[0].id, slotId: slots.find(slot => slot.available > 0).id } });
+  const booking = await bookingResponse.json();
+  await page.request.post(`/api/hospital/public/bookings/${booking.appointment.checkin_code}/check-in`);
+  await login(page); await page.goto('/hospital/operations');
+  await expect(page.getByRole('heading', { name: /Care operations/i })).toBeVisible();
+  const careOption = page.getByLabel('Operations appointment').locator('option', { hasText: 'Care Ops Browser' });
+  await expect(careOption).toHaveCount(1);
+  await page.getByLabel('Operations appointment').selectOption(await careOption.getAttribute('value'));
+  await page.getByLabel('Triage disposition').selectOption('nurse_review');
+  await page.getByLabel('Chest pain').check();
+  await page.getByLabel('Triage note').fill('Nurse review requested by Playwright.');
+  await page.getByRole('button', { name: 'Record triage' }).click();
+  await expect(page.getByText(/Triage recorded: nurse review/i)).toBeVisible();
+  const vitals = page.locator('.feed-item', { hasText: 'Vitals' });
+  await vitals.getByRole('button', { name: 'Start' }).click();
+  await expect(vitals.getByText('in_progress')).toBeVisible();
+  await vitals.getByRole('button', { name: 'Complete' }).click();
+  await expect(vitals.getByText('completed')).toBeVisible();
+  const lab = page.locator('.feed-item', { hasText: 'Laboratory' });
+  await lab.getByRole('button', { name: 'Require' }).click();
+  await expect(lab.getByText('waiting')).toBeVisible();
+  await page.getByLabel('Absence start').fill('2027-02-01T09:00');
+  await page.getByLabel('Absence end').fill('2027-02-01T17:00');
+  await page.getByLabel('Absence reason').fill('Approved leave');
+  await page.getByRole('button', { name: /Save absence & rebook/i }).click();
+  await expect(page.getByText(/Absence saved:/i)).toBeVisible();
+  await page.getByRole('button', { name: 'Preview FHIR' }).click();
+  await expect(page.getByLabel('FHIR appointment preview')).toContainText('"resourceType": "Appointment"');
+  await page.getByRole('button', { name: 'Sync HMIS' }).click();
+  await expect(page.getByText(/HMIS integration is not configured/i)).toBeVisible();
+  await page.screenshot({ path: 'artifacts/playwright/hospital-care-operations.png', fullPage: true });
+});
+
 test('admin can navigate every workspace and capture the dashboard', async ({ page }) => {
   await login(page);
   await expect(page.getByText(/agents online/i)).toBeVisible();

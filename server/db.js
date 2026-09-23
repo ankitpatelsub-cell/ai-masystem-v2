@@ -170,6 +170,31 @@ CREATE TABLE IF NOT EXISTS hospital_slot_policies (
   active INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL,
   FOREIGN KEY(doctor_id) REFERENCES hospital_doctors(id)
 );
+CREATE TABLE IF NOT EXISTS hospital_triage_assessments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  appointment_id INTEGER NOT NULL, disposition TEXT NOT NULL,
+  red_flags TEXT NOT NULL DEFAULT '[]', notes TEXT NOT NULL DEFAULT '', nurse TEXT NOT NULL,
+  created_at INTEGER NOT NULL, FOREIGN KEY(appointment_id) REFERENCES hospital_appointments(id)
+);
+CREATE TABLE IF NOT EXISTS hospital_visit_stages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  appointment_id INTEGER NOT NULL, stage TEXT NOT NULL, label TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'waiting', room TEXT, queue_number INTEGER,
+  started_at INTEGER, completed_at INTEGER, updated_at INTEGER NOT NULL,
+  UNIQUE(appointment_id,stage), FOREIGN KEY(appointment_id) REFERENCES hospital_appointments(id)
+);
+CREATE TABLE IF NOT EXISTS hospital_doctor_absences (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  doctor_id INTEGER NOT NULL, starts_at INTEGER NOT NULL, ends_at INTEGER NOT NULL,
+  substitute_doctor_id INTEGER, reason TEXT, created_by TEXT NOT NULL, created_at INTEGER NOT NULL,
+  FOREIGN KEY(doctor_id) REFERENCES hospital_doctors(id), FOREIGN KEY(substitute_doctor_id) REFERENCES hospital_doctors(id)
+);
+CREATE TABLE IF NOT EXISTS hospital_integration_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  appointment_id INTEGER NOT NULL, target TEXT NOT NULL, event_type TEXT NOT NULL,
+  status TEXT NOT NULL, detail TEXT, created_at INTEGER NOT NULL,
+  FOREIGN KEY(appointment_id) REFERENCES hospital_appointments(id)
+);
 `);
 
 // Additive migrations keep existing hospital databases compatible with the
@@ -183,7 +208,7 @@ for (const [name, type] of Object.entries({ service_type: "TEXT NOT NULL DEFAULT
   if (!hospitalSlotColumns.has(name)) db.exec(`ALTER TABLE hospital_slots ADD COLUMN ${name} ${type}`);
 }
 const hospitalAppointmentColumns = new Set(db.prepare('PRAGMA table_info(hospital_appointments)').all().map(column => column.name));
-for (const [name, type] of Object.entries({ visit_type: "TEXT NOT NULL DEFAULT 'appointment'", language: "TEXT NOT NULL DEFAULT 'en'" })) {
+for (const [name, type] of Object.entries({ visit_type: "TEXT NOT NULL DEFAULT 'appointment'", language: "TEXT NOT NULL DEFAULT 'en'", triage_status: "TEXT NOT NULL DEFAULT 'not_assessed'", original_doctor_id: 'INTEGER' })) {
   if (!hospitalAppointmentColumns.has(name)) db.exec(`ALTER TABLE hospital_appointments ADD COLUMN ${name} ${type}`);
 }
 
