@@ -7,4 +7,5 @@ artifacts/
 playwright-report/
 test-results/
 hospital-web/dist/
+hospital-web/dist-domain/
 *.tsbuildinfo
