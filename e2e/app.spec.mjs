@@ -70,6 +70,13 @@ test('separate hospital website supports the complete public patient journey', a
   await expect(page.getByRole('heading', { name: 'Walk-in check-in' })).toBeVisible();
   await page.goto('/hospital-site/board');
   await expect(page.getByRole('heading', { name: 'Now serving' })).toBeVisible();
+  await page.goto('/hospital-site/staff/login');
+  await page.getByLabel('Staff username').fill('admin');
+  await page.getByLabel('Staff password').fill('ShreeAuto@2026');
+  await page.getByRole('button', { name: 'Sign in to staff portal' }).click();
+  await expect(page.getByRole('heading', { name: 'Care operations' })).toBeVisible();
+  await expect(page.getByText('Standalone Site Patient')).toBeVisible();
+  await page.screenshot({ path: 'artifacts/playwright/hospital-site-staff-portal.png', fullPage: true });
 });
 
 test('visitor can book and check in for a hospital appointment', async ({ page }) => {
