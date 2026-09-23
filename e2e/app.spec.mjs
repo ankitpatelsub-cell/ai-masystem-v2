@@ -27,6 +27,28 @@ test('visitor can try the hospital demo and request a tailored walkthrough', asy
   await expect(page.getByText(/Thanks — our team will contact you/i)).toBeVisible();
 });
 
+test('separate hospital website supports the complete public patient journey', async ({ page }) => {
+  await page.goto('/hospital-site/');
+  await expect(page.getByRole('heading', { name: /Care that respects/i })).toBeVisible();
+  await expect(page.getByText('Your Hospital').first()).toBeVisible();
+  await page.screenshot({ path: 'artifacts/playwright/hospital-site-home.png', fullPage: true });
+  await page.getByRole('link', { name: 'Book an appointment' }).click();
+  await expect(page.getByRole('heading', { name: 'Book an appointment' })).toBeVisible();
+  await page.locator('.slots button:not([disabled])').first().click();
+  await page.getByLabel('Site patient name').fill('Standalone Site Patient');
+  await page.getByLabel('Site patient phone').fill('7444444444');
+  await page.getByRole('button', { name: 'Confirm appointment' }).click();
+  await expect(page.getByRole('heading', { name: 'Appointment confirmed' })).toBeVisible();
+  await page.screenshot({ path: 'artifacts/playwright/hospital-site-booking.png', fullPage: true });
+  await page.getByRole('main').getByRole('link', { name: 'Manage visit' }).click();
+  await expect(page.getByRole('heading', { name: 'Manage your visit' })).toBeVisible();
+  await expect(page.getByText(/confirmed/i).last()).toBeVisible();
+  await page.goto('/hospital-site/kiosk');
+  await expect(page.getByRole('heading', { name: 'Walk-in check-in' })).toBeVisible();
+  await page.goto('/hospital-site/board');
+  await expect(page.getByRole('heading', { name: 'Now serving' })).toBeVisible();
+});
+
 test('visitor can book and check in for a hospital appointment', async ({ page }) => {
   await page.goto('/hospital/book');
   await expect(page.getByLabel('Doctor')).toBeVisible();

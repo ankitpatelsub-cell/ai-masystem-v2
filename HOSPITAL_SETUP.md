@@ -8,6 +8,10 @@ The public patient flow is available at:
 - `/hospital/kiosk` — walk-in reception / tablet flow
 - `/hospital/board` — privacy-safe waiting-room display
 
+The separate patient-facing hospital website is available at `/hospital-site/`. It has its own source, styles, package, and production build under `hospital-web/`, so it can later be deployed on the hospital's own domain without the MASystem marketing or staff navigation.
+
+Copy `hospital-web/.env.example` to the deployment environment and set `VITE_HOSPITAL_NAME`, tagline, hospital contact number, and local emergency number when the final site identity is provided.
+
 Staff use `/hospital` after sign-in for appointments, live queue controls, transfers, priority audit, scheduling blocks, metrics, and delivery history.
 
 `/hospital/operations` provides nurse-reviewed triage, visit-stage handoffs (registration, vitals, consultation, laboratory, pharmacy, and billing), doctor-absence substitution/rebooking, and interoperability status. Triage is an operational aid only; hospitals must supply their approved emergency protocol and trained clinical staff remain responsible for disposition decisions.

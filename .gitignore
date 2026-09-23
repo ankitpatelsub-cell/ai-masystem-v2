@@ -6,3 +6,5 @@ node_modules/
 artifacts/
 playwright-report/
 test-results/
+hospital-web/dist/
+*.tsbuildinfo

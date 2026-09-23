@@ -64,7 +64,14 @@ app.get('/api/activity', requireAuth(['admin','staff','viewer']), (_,res)=>{
   res.json(db.prepare('SELECT * FROM activity ORDER BY id DESC LIMIT 30').all());
 });
 
-// Serve React build (web/dist)
+// Serve the independently deployable patient-facing hospital site first.
+const HOSPITAL_DIST = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../hospital-web/dist');
+if (fs.existsSync(HOSPITAL_DIST)) {
+  app.use('/hospital-site', express.static(HOSPITAL_DIST));
+  app.get(/^\/hospital-site(?:\/.*)?$/, (_req, res) => { res.sendFile(path.join(HOSPITAL_DIST, 'index.html')); });
+}
+
+// Serve the internal MASystem React build (web/dist)
 const DIST = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../web/dist');
 if (fs.existsSync(DIST)) {
   app.use(express.static(DIST));

@@ -1,6 +1,6 @@
 import { defineConfig } from '@playwright/test';
 
-const testEnv = 'RESET_TEST_DB=1 AGENT_TEST_MODE=1 HOSPITAL_DEMO_SEED=1 EMAIL_TRANSPORT=mock ADMIN_PASS=ShreeAuto@2026 JWT_SECRET=test-only-secret DB_PATH=/tmp/ai-masystem-v2-e2e.db PORT=8123';
+const testEnv = 'RESET_TEST_DB=1 AGENT_TEST_MODE=1 HOSPITAL_DEMO_SEED=1 HOSPITAL_PUBLIC_RATE_LIMIT=200 EMAIL_TRANSPORT=mock ADMIN_PASS=ShreeAuto@2026 JWT_SECRET=test-only-secret DB_PATH=/tmp/ai-masystem-v2-e2e.db PORT=8123';
 
 export default defineConfig({
   testDir: './e2e',
