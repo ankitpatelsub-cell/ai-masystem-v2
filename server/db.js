@@ -201,6 +201,12 @@ CREATE TABLE IF NOT EXISTS hospital_patient_documents (
   status TEXT NOT NULL DEFAULT 'received', created_at INTEGER NOT NULL,
   FOREIGN KEY(appointment_id) REFERENCES hospital_appointments(id)
 );
+CREATE TABLE IF NOT EXISTS hospital_data_requests (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  appointment_id INTEGER NOT NULL, request_type TEXT NOT NULL, detail TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'received', resolved_by TEXT, resolved_at INTEGER,
+  created_at INTEGER NOT NULL, FOREIGN KEY(appointment_id) REFERENCES hospital_appointments(id)
+);
 `);
 
 // Additive migrations keep existing hospital databases compatible with the
@@ -230,7 +236,11 @@ for (const [name, type] of Object.entries({
   cancellation_reason: "TEXT NOT NULL DEFAULT ''",
   payment_status: "TEXT NOT NULL DEFAULT 'not_required'",
   amount_due: 'INTEGER NOT NULL DEFAULT 0',
-  telehealth_url: "TEXT NOT NULL DEFAULT ''"
+  telehealth_url: "TEXT NOT NULL DEFAULT ''",
+  birth_date: "TEXT NOT NULL DEFAULT ''",
+  guardian_relationship: "TEXT NOT NULL DEFAULT ''",
+  consent_version: "TEXT NOT NULL DEFAULT '2026-01'",
+  consent_withdrawn_at: 'INTEGER'
 })) {
   if (!hospitalAppointmentColumns.has(name)) db.exec(`ALTER TABLE hospital_appointments ADD COLUMN ${name} ${type}`);
 }

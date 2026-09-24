@@ -64,6 +64,10 @@ test('separate hospital website supports the complete public patient journey', a
   await page.locator('.portal-card .slots button:not([disabled])').first().click();
   await page.getByRole('button', { name: 'Reschedule securely' }).click();
   await expect(page.getByRole('status')).toContainText('Saved successfully');
+  await page.getByLabel('Privacy request type').selectOption('correction');
+  await page.getByLabel('Privacy request details').fill('Please update my preferred contact details.');
+  await page.getByRole('button', { name: 'Submit privacy request' }).click();
+  await expect(page.getByText(/correction · received/i)).toBeVisible();
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: 'artifacts/playwright/hospital-site-secure-portal.png' });
   await page.goto('/hospital-site/kiosk');
@@ -77,6 +81,18 @@ test('separate hospital website supports the complete public patient journey', a
   await expect(page.getByRole('heading', { name: 'Care operations' })).toBeVisible();
   await expect(page.getByText('Standalone Site Patient')).toBeVisible();
   await page.screenshot({ path: 'artifacts/playwright/hospital-site-staff-portal.png', fullPage: true });
+  await page.getByRole('link', { name: 'Clinical flow' }).click();
+  await expect(page.getByRole('heading', { name: 'Triage and care stages' })).toBeVisible();
+  await page.getByRole('button', { name: 'Record triage' }).click();
+  await expect(page.getByText('Nurse triage recorded.')).toBeVisible();
+  await page.getByRole('link', { name: 'Configuration' }).click();
+  await expect(page.getByRole('heading', { name: 'Configuration and readiness' })).toBeVisible();
+  await page.getByLabel('Staff department name').fill('Demo Diagnostics');
+  await page.getByLabel('Staff department location').fill('North Wing');
+  await page.getByRole('button', { name: 'Add department' }).click();
+  await expect(page.getByText('Configuration saved.')).toBeVisible();
+  await expect(page.getByText('Provider readiness')).toBeVisible();
+  await page.screenshot({ path: 'artifacts/playwright/hospital-site-readiness.png', fullPage: true });
 });
 
 test('visitor can book and check in for a hospital appointment', async ({ page }) => {

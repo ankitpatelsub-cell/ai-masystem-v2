@@ -101,6 +101,8 @@ await T('hospital self-service, kiosk, schedule, transfer, display, and notifica
   const doctors = await j('GET', '/api/hospital/public/doctors');
   const date = new Date().toISOString().slice(0, 10), firstDoctor = doctors.data[0], secondDoctor = doctors.data[1];
   const slots = await j('GET', `/api/hospital/public/slots?doctorId=${secondDoctor.id}&date=${date}`);
+  const minorWithoutGuardian = await j('POST', '/api/hospital/public/bookings', { body: { patientName: 'Minor Test', birthDate: new Date().toISOString().slice(0, 4) + '-01-01', phone: '8000000000', doctorId: secondDoctor.id, slotId: slots.data[0].id, consent: true } });
+  assert.strictEqual(minorWithoutGuardian.status, 400);
   const booked = await j('POST', '/api/hospital/public/bookings', { body: { patientName: 'Self Service Test', phone: '8888888888', doctorId: secondDoctor.id, slotId: slots.data[0].id } });
   assert.strictEqual(booked.status, 201);
   const lookup = await j('GET', `/api/hospital/public/bookings/${booked.data.appointment.booking_code}`);
@@ -123,6 +125,12 @@ await T('hospital self-service, kiosk, schedule, transfer, display, and notifica
   assert.strictEqual(document.status, 201); assert.strictEqual(document.data.document.status, 'received');
   const payment = await j('POST', `/api/hospital/public/portal/${booked.data.appointment.booking_code}/payment-intent`, { patientToken });
   assert.strictEqual(payment.status, 200); assert.strictEqual(payment.data.status, 'provider_required');
+  const privacy = await j('POST', `/api/hospital/public/portal/${booked.data.appointment.booking_code}/data-requests`, { patientToken, body: { requestType: 'correction', detail: 'Please correct my preferred contact.' } });
+  assert.strictEqual(privacy.status, 201); assert.strictEqual(privacy.data.request.status, 'received');
+  const privacyDesk = await j('GET', '/api/hospital/data-requests', { token: adminTok });
+  assert.strictEqual(privacyDesk.status, 200); assert.ok(privacyDesk.data.some(request => request.id === privacy.data.request.id));
+  const privacyResolved = await j('PATCH', `/api/hospital/data-requests/${privacy.data.request.id}`, { token: adminTok, body: { status: 'completed' } });
+  assert.strictEqual(privacyResolved.status, 200); assert.strictEqual(privacyResolved.data.request.status, 'completed');
   const walkIn = await j('POST', '/api/hospital/public/walk-ins', { body: { patientName: 'Kiosk Test', phone: '7777777777', doctorId: secondDoctor.id, reason: 'Walk-in' } });
   assert.strictEqual(walkIn.status, 201); assert.strictEqual(walkIn.data.appointment.visit_type, 'walk_in');
   const display = await j('GET', `/api/hospital/public/display?doctorId=${secondDoctor.id}&date=${date}`);
@@ -182,7 +190,7 @@ await T('hospital triage, visit stages, absence rebooking, and interoperability 
   const fhir = await j('GET', `/api/hospital/appointments/${booking.data.appointment.id}/fhir`, { token: adminTok });
   assert.strictEqual(fhir.status, 200); assert.strictEqual(fhir.data.resourceType, 'Appointment');
   const integration = await j('GET', '/api/hospital/integrations/status', { token: adminTok });
-  assert.strictEqual(integration.status, 200); assert.strictEqual(integration.data.fhirVersion, 'R4 Appointment');
+  assert.strictEqual(integration.status, 200); assert.strictEqual(integration.data.fhirVersion, 'R4 Appointment'); assert.ok(integration.data.notifications); assert.ok(integration.data.documentStorage);
   const unconfigured = await j('POST', `/api/hospital/appointments/${booking.data.appointment.id}/sync`, { body: { target: 'hmis' }, token: adminTok });
   assert.strictEqual(unconfigured.status, 409);
 });

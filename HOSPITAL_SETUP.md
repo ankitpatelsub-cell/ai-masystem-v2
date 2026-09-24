@@ -41,8 +41,16 @@ HOSPITAL_ABDM_WEBHOOK=https://approved-abdm-gateway.example/appointments
 HOSPITAL_ABDM_TOKEN=abdm-issued-secret
 HOSPITAL_TELEHEALTH_BASE_URL=https://video.hospital.example/visit
 HOSPITAL_PAYMENT_WEBHOOK=https://payments.hospital.example/checkout
+HOSPITAL_DOCUMENT_STORAGE_WEBHOOK=https://documents.hospital.example/intake
+BACKUP_DIR=/var/backups/masystem-hospital
+BACKUP_PREFIX=hospital
+BACKUP_KEEP=30
 ```
 
 The webhook receives the event channel, event kind, body, destination, and booking code. Configure it to route `sms` to your approved SMS/WhatsApp provider and `email` to your email provider. Use `HOSPITAL_NOTIFICATION_TRANSPORT=mock` for safe non-delivery environments.
 
 The standalone patient portal requires a one-time code and issues a hashed, appointment-scoped session that expires after 30 minutes. In production, place the public app behind HTTPS, connect the generic webhooks to hospital-approved messaging, video and payment providers, and complete hospital-specific privacy, retention, consent, accessibility and incident-response reviews. The demo document workflow records intake metadata; connect approved encrypted object storage and malware scanning before accepting real clinical files. HMIS and ABDM endpoints receive a FHIR R4 Appointment payload. ABDM/ABHA interoperability requires separate provider onboarding and credentials; the optional ABHA field alone is not a network integration.
+
+The patient portal records versioned consent and supports access, correction, deletion, and consent-withdrawal requests. Hospital privacy staff must review and resolve those requests according to the hospital's retention duties; a deletion request does not automatically erase a legally required clinical record.
+
+Run `server/backup_db.mjs` from a protected timer or scheduler. Backups use SQLite's online backup API, configurable retention, and a separate backup directory. Production rollout still requires encrypted off-host copies and a documented restore drill.

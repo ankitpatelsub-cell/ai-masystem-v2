@@ -11,17 +11,18 @@ dotenv.config({ path: path.join(here, '..', '.env') });
 
 const SRC = process.env.DB_PATH || path.join(here, '..', 'masystem.db');
 const DIR = process.env.BACKUP_DIR || '/root/backups';
-const KEEP = 14;
+const KEEP = Math.max(1, Number(process.env.BACKUP_KEEP || 14));
+const PREFIX = String(process.env.BACKUP_PREFIX || 'masystem').replace(/[^a-zA-Z0-9_-]/g, '');
 
 fs.mkdirSync(DIR, { recursive: true });
 const stamp = new Date().toISOString().slice(0, 10);
-const dest = path.join(DIR, `masystem-${stamp}.db`);
+const dest = path.join(DIR, `${PREFIX}-${stamp}.db`);
 
 const db = new Database(SRC, { readonly: true });
 await db.backup(dest);
 db.close();
 
-const backups = fs.readdirSync(DIR).filter(f => /^masystem-\d{4}-\d{2}-\d{2}\.db$/.test(f)).sort();
+const backups = fs.readdirSync(DIR).filter(f => new RegExp(`^${PREFIX}-\\d{4}-\\d{2}-\\d{2}\\.db$`).test(f)).sort();
 for (const f of backups.slice(0, Math.max(0, backups.length - KEEP))) fs.unlinkSync(path.join(DIR, f));
 
 console.log(`backup ok: ${dest} (${fs.statSync(dest).size} bytes), kept ${Math.min(backups.length, KEEP)}`);
