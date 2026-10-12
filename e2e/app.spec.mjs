@@ -16,6 +16,8 @@ async function openWorkspace(page, label) {
 
 test('visitor can try the prototype sandbox and leave contact details', async ({ page }) => {
   await page.goto('/#hospital-demo');
+  const supportLink = page.locator('footer').getByRole('link', { name: 'support@masystem.co.in' });
+  await expect(supportLink).toHaveAttribute('href', 'mailto:support@masystem.co.in');
   await page.getByRole('button', { name: /Run hospital demo/i }).click();
   await expect(page.getByText(/demo token/i)).toBeVisible();
   await page.screenshot({ path: 'artifacts/playwright/hospital-demo.png', fullPage: true });
