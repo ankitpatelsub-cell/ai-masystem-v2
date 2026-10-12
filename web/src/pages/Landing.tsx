@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { api } from '../lib/api';
 
-const CONTACT_EMAIL = 'hello@masystem.co.in';
+const CONTACT_EMAIL = 'support@masystem.co.in';
 
 const CAPABILITIES = [
   { ic: '🔎', t: 'Research & analysis', d: 'Gather information from sources and turn it into clear findings.' },
@@ -142,7 +142,7 @@ export default function Landing() {
       <section id="about" style={{ maxWidth: 800, margin: '40px auto', padding: '20px 6vw', textAlign: 'center' }}>
         <h2 style={{ fontSize: 26, fontWeight: 900, marginBottom: 12 }}>About MA System</h2>
         <p className="muted" style={{ lineHeight: 1.7 }}>
-          MA System is an independent, early-stage AI project based in India, founded by Ankit Patel. We are exploring how intelligent agents can make advanced automation more accessible to individuals and businesses. MA System is not yet a registered company, and the product is still in development.
+          MA System is an independent, early-stage AI project based in India, founded by MASystem. We are exploring how intelligent agents can make advanced automation more accessible to individuals and businesses. MA System is not yet a registered company, and the product is still in development.
         </p>
       </section>
 
