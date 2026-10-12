@@ -14,9 +14,8 @@ async function openWorkspace(page, label) {
   await link.click();
 }
 
-test('visitor can try the hospital demo and request a tailored walkthrough', async ({ page }) => {
-  await page.goto('/');
-  await page.getByRole('link', { name: /Try hospital demo/i }).click();
+test('visitor can try the prototype sandbox and leave contact details', async ({ page }) => {
+  await page.goto('/#hospital-demo');
   await page.getByRole('button', { name: /Run hospital demo/i }).click();
   await expect(page.getByText(/demo token/i)).toBeVisible();
   await page.screenshot({ path: 'artifacts/playwright/hospital-demo.png', fullPage: true });
@@ -24,7 +23,7 @@ test('visitor can try the hospital demo and request a tailored walkthrough', asy
   await page.getByLabel('Work email').fill('priya@example.com');
   await page.getByLabel('Hospital or clinic').fill('Sunrise Clinic');
   await page.getByRole('button', { name: /Request hospital demo/i }).click();
-  await expect(page.getByText(/Thanks — our team will contact you/i)).toBeVisible();
+  await expect(page.getByText(/Thanks — we’ll be in touch/i)).toBeVisible();
 });
 
 test('separate hospital website supports the complete public patient journey', async ({ page }) => {
